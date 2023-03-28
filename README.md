@@ -5,7 +5,9 @@ This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can p
 ## Installation
 
 Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
+
 Copy the `.env-example` file to `.env`: `cp .env-example .env`
+
 Fill in the `.env` file with your Mastodon access token, Mastodon API URL, and OpenAI API key.
 
 ## Usage
