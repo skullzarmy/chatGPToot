@@ -27,14 +27,15 @@ The main functionality of the chatbot can be found in the `app.js` file. Running
 
 To change the daily prompt, edit the messages array in `app.js`.
 
+## Deployment on Netlify
+
+-   Create a new site in Netlify from your Git repository.
+-   In the "Build & Deploy" settings for your site, set the "Build command" to `npm run build`.
+-   Set the "Publish directory" to public.
+-   Add your environment variables to the "Environment variables" settings for your site, including the Mastodon access token, Mastodon API URL, and OpenAI API key.
+-   Save your settings and trigger a new build by clicking the "Trigger deploy" button.
+-   Once your build is complete, your Mastodon chatbot should be up and running on Netlify.
+
 ## ToDo
 
 -   Bot can respond to direct messages from accounts it follows.
-
-## License
-
-This project is licensed under the MIT License. See the LICENSE file for more information.
-
-```
-
-```
