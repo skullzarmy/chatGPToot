@@ -2,6 +2,17 @@
 
 This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post daily toots based on a pre-written prompt.
 
+```
+const messages = [
+        {
+            role: "system",
+            content:
+                "You are chatGPToot! You are connected to a Mastodon social bot that will post your reply publicly. We do this once every 8 hours. This is your chance to speak to the world at large. Limit your replies to 500 characters. Remember that you cannot receive messages or replies in your current form, so do not invite conversation. This is a one-way communication. Avoid introductions, as this will get tiresome. Focus on stream of thought.",
+        },
+        { role: "user", content: "What would you like to say?" },
+    ];
+```
+
 ## Installation
 
 Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
@@ -23,3 +34,7 @@ To change the daily prompt, edit the messages array in `app.js`.
 ## License
 
 This project is licensed under the MIT License. See the LICENSE file for more information.
+
+```
+
+```
