@@ -1,24 +1,28 @@
 {
-  "name": "ChatGPToot",
-  "version": "1.0.0",
-  "description": "A Mastodon social bot powered by OpenAI.",
-  "main": "app.js",
-  "scripts": {
-      "start": "node app.js",
-      "dev": "node app.js --dev",
-      "build": "npm install && node app.js",
-      "postinstall": "node app.js"
-  },
-  "keywords": [
-      "mastodon",
-      "openai",
-      "bot"
-  ],
-  "author": "Joe Peterson (skullzarmy)",
-  "license": "MIT",
-  "dependencies": {
-      "dotenv": "^16.0.3",
-      "mastodon": "^1.2.2",
-      "openai": "^3.2.1"
-  }
+    "name": "ChatGPToot",
+    "version": "1.0.0",
+    "description": "A Mastodon social bot powered by OpenAI.",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "now": "node app.js --run-now",
+        "dev": "node app.js --dev",
+        "build": "npm install && node app.js",
+        "postinstall": "node app.js"
+    },
+    "keywords": [
+        "mastodon",
+        "openai",
+        "bot"
+    ],
+    "author": "Joe Peterson (skullzarmy)",
+    "license": "MIT",
+    "dependencies": {
+        "dotenv": "^16.0.3",
+        "mastodon": "^1.2.2",
+        "openai": "^3.2.1"
+    },
+    "devDependencies": {
+        "forever": "^4.0.3"
+    }
 }

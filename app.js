@@ -54,6 +54,7 @@ function postToot(devMode = false) {
 // Parse command line arguments
 const args = process.argv.slice(2);
 const devMode = args.includes("--dev");
+const runNow = args.includes("--run-now");
 
 // Run the code on an interval of 8 hours
 setInterval(() => {
@@ -63,4 +64,8 @@ if (devMode) {
     postToot(devMode);
 }
 console.log("ChatGPToot is running...");
-console.log("Next toot will be posted at: ", new Date(Date.now() + 8 * 60 * 60 * 1000));
+if (runNow) {
+    postToot(devMode);
+} else {
+    console.log("Next toot will be posted at: ", new Date(Date.now() + 8 * 60 * 60 * 1000));
+}

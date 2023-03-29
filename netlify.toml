@@ -1,0 +1,6 @@
+[build]
+  command = "echo 'Nothing to build'"
+  functions = "functions"
+
+[dev]
+  command = "forever start app.js"
