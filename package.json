@@ -6,7 +6,7 @@
     "scripts": {
         "start": "node app.js",
         "dev": "node app.js --dev",
-        "build": "npm install"
+        "build": "npm install && node app.js"
     },
     "keywords": [
         "mastodon",

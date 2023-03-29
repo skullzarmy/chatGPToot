@@ -1,3 +1,2 @@
 [build]
-command = "npm run build"
-publish = "public"
+  command = "npm install && node app.js"
