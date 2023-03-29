@@ -1,7 +1,28 @@
 {
+    "name": "ChatGPToot",
+    "version": "1.0.0",
+    "description": "A Mastodon social bot powered by OpenAI.",
+    "main": "app.js",
+    "scripts": {
+        "start": "node app.js",
+        "dev": "node app.js --dev",
+        "build": "npm install && npm run build:app",
+        "build:app": "npx webpack"
+    },
+    "keywords": [
+        "mastodon",
+        "openai",
+        "bot"
+    ],
+    "author": "Your Name",
+    "license": "MIT",
     "dependencies": {
         "dotenv": "^16.0.3",
         "mastodon": "^1.2.2",
         "openai": "^3.2.1"
+    },
+    "netlify": {
+        "build": "npm run build",
+        "publish": "public"
     }
 }
