@@ -6,9 +6,9 @@
     "scripts": {
         "start": "node app.js",
         "now": "node app.js --run-now",
+        "image": "node app.js --post-image",
         "dev": "node app.js --dev",
-        "build": "npm install && node app.js",
-        "postinstall": "node app.js"
+        "build": "npm install && npm start"
     },
     "keywords": [
         "mastodon",
@@ -21,8 +21,5 @@
         "dotenv": "^16.0.3",
         "mastodon": "^1.2.2",
         "openai": "^3.2.1"
-    },
-    "devDependencies": {
-        "forever": "^4.0.3"
     }
 }
