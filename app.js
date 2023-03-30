@@ -169,7 +169,8 @@ function postImageToot(devMode = false) {
                         console.log(`OpenAI Image Response: ${imgURL}`);
 
                         const filename = "new_toot_" + Date.now() + ".png";
-                        const filePath = path.join(__dirname, filename);
+                        // const filePath = path.join(__dirname, filename); - put the image inside a media folder at this directory
+                        const filePath = path.join(__dirname, "media", filename); // put the image inside a media folder at this directory
 
                         downloadImage(imgURL, filePath, function () {
                             console.log("Image downloaded to " + filePath);
