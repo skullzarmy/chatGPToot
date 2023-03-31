@@ -170,7 +170,7 @@ async function checkMentions() {
     try {
         const notifications = await mastodon.get("notifications", { types: ["mention"] });
         console.log(`${notifications.data.length} mentions found at ${new Date()}`);
-        if (notifications.data.length === 0) {
+        if (notifications.data.length > 0) {
             const followingResponse = await mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
             const following = followingResponse.data;
             // console.log("Following data:", following);
