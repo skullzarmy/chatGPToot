@@ -166,47 +166,23 @@ async function handleRegularMention(mention) {
     }
 }
 
-// function checkMentions() {
-//     mastodon
-//         .get("notifications", { types: ["mention"] })
-//         .then(async (response) => {
-//             console.log(response.data.length + " mentions found at " + new Date());
-
-//             for (const mention of response.data) {
-//                 const following = await getFollowing();
-//                 await processMention(mention, following);
-//             }
-//         })
-//         .catch((error) => console.error(`Mastodon Error: ${error}`));
-// }
-
 async function checkMentions() {
     try {
         const notifications = await mastodon.get("notifications", { types: ["mention"] });
         console.log(`${notifications.data.length} mentions found at ${new Date()}`);
+        if (notifications.data.length === 0) {
+            const followingResponse = await mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
+            const following = followingResponse.data;
+            // console.log("Following data:", following);
 
-        const followingResponse = await mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
-        const following = followingResponse.data;
-        console.log("Following data:", following);
-
-        for (const mention of notifications.data) {
-            await processMention(mention, following);
+            for (const mention of notifications.data) {
+                await processMention(mention, following);
+            }
         }
     } catch (error) {
         console.error("Error checking mentions:", error);
     }
 }
-
-// const args = process.argv.slice(2);
-// const noLoop = args.includes("--no-loop");
-
-// if (!noLoop) {
-//     setInterval(() => {
-//         checkMentions();
-//     }, 15000);
-// }
-
-// checkMentions();
 
 async function main() {
     const args = process.argv.slice(2);

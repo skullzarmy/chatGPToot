@@ -28,7 +28,7 @@ The main functionality of the chatbot can be found in the `app.js` file. Running
 
 ## Example Usage
 
-`node app.js` - Will start the bot in normal operation.
+`node run start` - Will start the bot in normal operation.
 
 `node app.js --run-now --no-loop --post-image --prompt "A robot mastodon typing at a computer"` - Will generate an image from the supplied prompt and post it, then exit.
 
@@ -43,15 +43,8 @@ The main functionality of the chatbot can be found in the `app.js` file. Running
 
 `npm run mentions-once` - Will check and respond to notifications once then exit
 
----
+`npm run mentions-server` - Will run the mentions.js file in the background using nohup, and pipe output to logs/bot-log.log
 
-## Deployment on Netlify -- (not currently using cloud deployment)
-
--   Create a new site in Netlify from your Git repository.
--   In the "Build & Deploy" settings for your site, set the "Build command" to npm run build.
--   Set the "Publish directory" to /.
--   Add your environment variables to the "Environment variables" settings for your site, including the Mastodon access token, Mastodon API URL, and OpenAI API key.
--   Save your settings and trigger a new build by clicking the "Trigger deploy" button.
--   Once your build is complete, your Mastodon chatbot should be up and running on Netlify.
+-   `watch tail -f logs/bot-log.log` - Streams the new lines of the log file to your current terminal.
 
 ---
