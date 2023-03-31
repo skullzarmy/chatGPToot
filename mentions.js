@@ -71,37 +71,34 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
 }
 
 async function processMention(mention, following) {
-    const isFollowing = following.data.some((followed) => followed.id === mention.account.id);
+    if (following.includes(mention.account.id)) {
+        const content = mention.status.content
+            .replace(/<[^>]*>?/gm, "")
+            .replace("@chatGPToot", "")
+            .trim();
+        const commandIndex = content.indexOf("//");
+        const commandEndIndex =
+            content.indexOf(" ", commandIndex) !== -1 ? content.indexOf(" ", commandIndex) : content.length;
+        const command = content.slice(commandIndex, commandEndIndex).trim();
+        const prompt = content.replace(command, "").trim();
 
-    if (!isFollowing) {
-        console.log("Not following user.");
-        await postToot(
-            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. Please let us know if you would like to help us test this bot and how you would like to use it to be considered.",
-            "public",
-            mention.status.id
-        );
-        await dismissNotification(mention.id);
-        return;
-    }
+        console.log("Content: ", content);
+        console.log("Command: ", command);
+        console.log("Prompt: ", prompt);
 
-    const content = mention.status.content.replace(/<[^>]*>?/gm, "");
-    const command = content.trim().substring(0, 2).toLowerCase();
-    const text = content.substring(content.lastIndexOf("//") + 1).trim();
-
-    console.log("Content: ", content);
-    console.log("Command: ", command);
-    console.log("Prompt: ", prompt);
-
-    if (command === "//") {
-        if (text.startsWith("image")) {
-            handleImageCommand(mention, text.substring("image".length).trim());
-        } else if (text.startsWith("help") || text.startsWith("commands")) {
+        if (command === "//image") {
+            handleImageCommand(mention, prompt);
+        } else if (command === "//help" || command === "//commands") {
             handleHelpCommand(mention);
         } else {
-            handleHelpCommand(mention);
+            handleRegularMention(mention);
         }
     } else {
-        handleRegularMention(mention);
+        console.log("Not following user.");
+        const reply =
+            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. Please let us know if you would like to help us test this bot and how you would like to use it to be considered.";
+        await postToot(reply, "public", mention.status.id);
+        await dismissNotification(mention.id);
     }
 }
 
