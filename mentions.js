@@ -71,7 +71,9 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
 }
 
 async function processMention(mention, following) {
-    if (following.includes(mention.account.id)) {
+    const isFollowing = following.some((followed) => followed.id === mention.account.id);
+
+    if (isFollowing) {
         const content = mention.status.content
             .replace(/<[^>]*>?/gm, "")
             .replace("@chatGPToot", "")
@@ -86,9 +88,9 @@ async function processMention(mention, following) {
         console.log("Command: ", command);
         console.log("Prompt: ", prompt);
 
-        if (command === "//image") {
+        if (command === "//image//") {
             handleImageCommand(mention, prompt);
-        } else if (command === "//help" || command === "//commands") {
+        } else if (command === "//help//" || command === "//commands//") {
             handleHelpCommand(mention);
         } else {
             handleRegularMention(mention);
@@ -113,18 +115,23 @@ async function handleImageCommand(mention, prompt) {
         downloadImage(imageUrl, filepath, async () => {
             console.log("Image downloaded to " + filepath);
 
-            const media = await mastodon.post("media", {
+            const mediaResponse = await mastodon.post("media", {
                 file: fs.createReadStream(filepath),
-                in_reply_to_id: mention.status.id,
             });
 
-            const id = media.data.id;
-            await postToot(
-                `@${mention.account.username} Image prompt: ${prompt.substring(0, 486)}`,
-                "public",
-                mention.status.id,
-                id
-            );
+            const mediaId = mediaResponse.data.id;
+
+            const tootText = `@${mention.account.username} Image prompt: ${prompt.substring(0, 486)}`;
+
+            const tootResponse = await mastodon.post("statuses", {
+                status: tootText,
+                in_reply_to_id: mention.status.id,
+                media_ids: [mediaId],
+                visibility: "public",
+            });
+
+            console.log("Toot with image posted:", tootResponse.data);
+
             await dismissNotification(mention.id);
         });
     } catch (error) {
@@ -159,27 +166,58 @@ async function handleRegularMention(mention) {
     }
 }
 
-function checkMentions() {
-    mastodon
-        .get("notifications", { types: ["mention"] })
-        .then(async (response) => {
-            console.log(response.data.length + " mentions found at " + new Date());
+// function checkMentions() {
+//     mastodon
+//         .get("notifications", { types: ["mention"] })
+//         .then(async (response) => {
+//             console.log(response.data.length + " mentions found at " + new Date());
 
-            for (const mention of response.data) {
-                const following = await getFollowing();
-                await processMention(mention, following);
-            }
-        })
-        .catch((error) => console.error(`Mastodon Error: ${error}`));
+//             for (const mention of response.data) {
+//                 const following = await getFollowing();
+//                 await processMention(mention, following);
+//             }
+//         })
+//         .catch((error) => console.error(`Mastodon Error: ${error}`));
+// }
+
+async function checkMentions() {
+    try {
+        const notifications = await mastodon.get("notifications", { types: ["mention"] });
+        console.log(`${notifications.data.length} mentions found at ${new Date()}`);
+
+        const followingResponse = await mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
+        const following = followingResponse.data;
+        console.log("Following data:", following);
+
+        for (const mention of notifications.data) {
+            await processMention(mention, following);
+        }
+    } catch (error) {
+        console.error("Error checking mentions:", error);
+    }
 }
 
-const args = process.argv.slice(2);
-const noLoop = args.includes("--no-loop");
+// const args = process.argv.slice(2);
+// const noLoop = args.includes("--no-loop");
 
-if (!noLoop) {
-    setInterval(() => {
-        checkMentions();
-    }, 15000);
+// if (!noLoop) {
+//     setInterval(() => {
+//         checkMentions();
+//     }, 15000);
+// }
+
+// checkMentions();
+
+async function main() {
+    const args = process.argv.slice(2);
+    const noLoop = args.includes("--no-loop");
+
+    if (!noLoop) {
+        setInterval(() => {
+            checkMentions();
+        }, 15000);
+    }
+    await checkMentions();
 }
 
-checkMentions();
+main();
