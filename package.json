@@ -10,7 +10,8 @@
         "dev": "node app.js --dev",
         "build": "npm install && npm start",
         "mentions": "node mentions.js",
-        "mentions-once": "node mentions.js --no-loop"
+        "mentions-once": "node mentions.js --no-loop",
+        "mention-server": "nohup npm run mentions > logs/bot-log.log 2>&1 &"
     },
     "keywords": [
         "mastodon",
