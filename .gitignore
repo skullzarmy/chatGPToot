@@ -2,5 +2,7 @@
 
 # Local Netlify folder
 .netlify
-# Local Media folder
-media
+# Local Media folder contents
+media/*
+# Log folder contents
+logs/*

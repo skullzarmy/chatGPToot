@@ -8,7 +8,9 @@
         "now": "node app.js --run-now",
         "image": "node app.js --post-image",
         "dev": "node app.js --dev",
-        "build": "npm install && npm start"
+        "build": "npm install && npm start",
+        "mentions": "node mentions.js",
+        "mentions-once": "node mentions.js --no-loop"
     },
     "keywords": [
         "mastodon",
