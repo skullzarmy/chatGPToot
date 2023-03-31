@@ -24,6 +24,12 @@ const messages = [
 
 const MAX_TOKENS = 3000; // You can adjust this value based on your requirements
 
+function downloadImage(url, dest, cb) {
+    request.head(url, function (err, res, body) {
+        request(url).pipe(fs.createWriteStream(dest)).on("close", cb);
+    });
+}
+
 function postToot(status, visibility, in_reply_to_id) {
     return mastodon.post("statuses", {
         status,
@@ -81,6 +87,10 @@ async function processMention(mention, following) {
     const content = mention.status.content.replace(/<[^>]*>?/gm, "");
     const command = content.trim().substring(0, 2).toLowerCase();
     const text = content.substring(content.lastIndexOf("//") + 1).trim();
+
+    console.log("Content: ", content);
+    console.log("Command: ", command);
+    console.log("Prompt: ", prompt);
 
     if (command === "//") {
         if (text.startsWith("image")) {
