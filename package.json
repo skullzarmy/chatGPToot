@@ -1,24 +1,24 @@
 {
     "name": "ChatGPToot",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "description": "A Mastodon social bot powered by OpenAI.",
-    "main": "app.js",
+    "main": "chatgptoot.js",
     "scripts": {
-        "start": "node app.js",
-        "now": "node app.js --run-now",
-        "image": "node app.js --post-image",
-        "dev": "node app.js --dev",
-        "build": "npm install && npm start",
-        "mentions": "node mentions.js",
-        "mentions-once": "node mentions.js --no-loop",
-        "mentions-server": "nohup npm run mentions > logs/bot-log.log 2>&1 &"
+        "bot": "nohup node chatgptoot.js > logs/bot-log.log 2>&1 &",
+        "bot-mention": "nohup node chatgptoot.js --no-toot --no-image > logs/bot-log.log 2>&1 &",
+        "bot-image": "nohup node chatgptoot.js --no-toot --no-mention > logs/bot-log.log 2>&1 &",
+        "bot-toot": "nohup node chatgptoot.js --no-image --no-mention > logs/bot-log.log 2>&1 &",
+        "single-toot": "node chatgptoot.js --no-loop --no-image --no-mention",
+        "single-image": "node chatgptoot.js --no-loop --no-mention --no-toot",
+        "single-mention": "node chatgptoot.js --no-loop --no-toot --no-image",
+        "tail-logs": "watch tail -f logs/bot-log.log"
     },
     "keywords": [
         "mastodon",
         "openai",
         "bot"
     ],
-    "author": "Joe Peterson (skullzarmy)",
+    "author": "Joe Peterson (@skullzarmy@mastodon.social)",
     "license": "MIT",
     "dependencies": {
         "dotenv": "^16.0.3",

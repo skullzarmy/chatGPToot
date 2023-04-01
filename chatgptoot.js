@@ -120,15 +120,25 @@ async function handleImageCommand(mention, prompt) {
             });
 
             const mediaId = mediaResponse.data.id;
-
-            const tootText = `@${mention.account.username} Image prompt: ${prompt.substring(0, 486)}`;
-
-            const tootResponse = await mastodon.post("statuses", {
-                status: tootText,
-                in_reply_to_id: mention.status.id,
-                media_ids: [mediaId],
-                visibility: "public",
-            });
+            if (mention) {
+                const tootText = `@${mention.account.username} Image prompt: ${prompt.substring(
+                    0,
+                    484 - mention.account.username.length
+                )}`;
+                const tootResponse = await mastodon.post("statuses", {
+                    status: tootText,
+                    in_reply_to_id: mention.status.id,
+                    media_ids: [mediaId],
+                    visibility: "public",
+                });
+            } else {
+                const tootText = `Image prompt: ${prompt.substring(0, 486)}`;
+                const tootResponse = await mastodon.post("statuses", {
+                    status: tootText,
+                    media_ids: [mediaId],
+                    visibility: "public",
+                });
+            }
 
             console.log("Toot with image posted:", tootResponse.data);
 
@@ -166,14 +176,57 @@ async function handleRegularMention(mention) {
     }
 }
 
+async function generateImagePrompt() {
+    const msg = [
+        {
+            role: "system",
+            content:
+                "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via openAI and post to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
+        },
+        {
+            role: "system",
+            content: "Please create an image generation prompt. What image would you like to create?",
+        },
+    ];
+
+    const response = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: msg,
+    });
+
+    const prompt = response.data.choices[0].message.content;
+    return prompt;
+}
+
+async function generateToot() {
+    const msg = [
+        {
+            role: "system",
+            content:
+                "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write a toot, which will be posted to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a toot which will be posted automatically. There is no human intervention. Limit your response to 500 characters.",
+        },
+        {
+            role: "system",
+            content: "Please create a toot. What would you like to say?",
+        },
+    ];
+
+    const response = await openai.createChatCompletion({
+        model: "gpt-3.5-turbo",
+        messages: msg,
+    });
+
+    const toot = response.data.choices[0].message.content;
+    return toot;
+}
+
 async function checkMentions() {
     try {
         const notifications = await mastodon.get("notifications", { types: ["mention"] });
         console.log(`${notifications.data.length} mentions found at ${new Date()}`);
         if (notifications.data.length > 0) {
-            const followingResponse = await mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
+            const followingResponse = await getFollowing();
             const following = followingResponse.data;
-            // console.log("Following data:", following);
 
             for (const mention of notifications.data) {
                 await processMention(mention, following);
@@ -187,13 +240,42 @@ async function checkMentions() {
 async function main() {
     const args = process.argv.slice(2);
     const noLoop = args.includes("--no-loop");
+    const noImage = args.includes("--no-image");
+    const noToot = args.includes("--no-toot");
+    const noMention = args.includes("--no-mention");
+    const tootNow = args.includes("--toot-now");
+    const imageNow = args.includes("--image-now");
 
     if (!noLoop) {
-        setInterval(() => {
-            checkMentions();
-        }, 15000);
+        if (!noMention) {
+            let mentionLoop = setInterval(() => {
+                checkMentions();
+            }, 15000); // 15 seconds
+        }
+        if (!noImage) {
+            let imageLoop = setInterval(() => {
+                const prompt = generateImagePrompt();
+                handleImageCommand(null, prompt);
+            }, 7200000); // 2 hours
+        }
+        if (!noToot) {
+            let tootLoop = setInterval(() => {
+                const toot = generateToot();
+                postToot(toot, "public", null);
+            }, 3600000); // 1 hour
+        }
     }
-    await checkMentions();
+    if (tootNow) {
+        const toot = generateToot();
+        postToot(toot, "public", null);
+    }
+    if (imageNow) {
+        const prompt = generateImagePrompt();
+        handleImageCommand(null, prompt);
+    }
+    if (!noMention) {
+        await checkMentions();
+    }
 }
 
 main();

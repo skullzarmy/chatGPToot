@@ -1,6 +1,6 @@
 # chatGPToot 🦣 -- Mastodon OpenAI Chatbot 🤖
 
-### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post daily toots based on a pre-written prompt or generate an image based on a user prompt and post it to Mastodon.
+### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post toots and DALL-E images based on a pre-written prompt or respond to direct mentions.
 
 ---
 
@@ -8,43 +8,59 @@
 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
 -   Copy the .env-example file to .env: `cp .env-example .env`
--   Fill in the .env file with your Mastodon access token, Mastodon API URL, and OpenAI API key.
+-   Fill in the .env file with your Mastodon access token, Mastodon API URL, Mastodon Account ID, and OpenAI API key.
 
 ---
-
-## Usage
-
-The main functionality of the chatbot can be found in the `app.js` file. Running `node app.js` will generate a response using OpenAI and post a toot to Mastodon. To change the daily toot prompt, edit the messages array in `app.js`.
 
 ## Arguments
 
-### The following arguments are available for `app.js`:
+### The following arguments are available for `chatgptoot.js`:
 
--   `--dev`: Run the chatbot in development mode. The toot will not be posted to Mastodon, and the console will show the generated toot or image URL instead.
--   `--run-now`: Run the chatbot immediately, instead of waiting for the next interval.
--   `--post-image`: Generate an image and post it to Mastodon instead of generating a toot.
--   `--prompt [string]`: Specify a user prompt to use instead of the default prompt in the code. The prompt should be enclosed in quotes.
--   `--no-loop`: Run the chatbot once and exit, instead of running on an interval.
+`--no-loop` - Disables the automatic toot, image, and mention loops. This is useful if you want to run the script manually to test it.
+
+`--no-image` - Disables the automatic image loop.
+
+`--no-toot` - Disables the automatic toot loop.
+
+`--no-mention` - Disables the automatic mention loop.
+
+`--toot-now` - Generates a toot and posts it immediately.
+
+`--image-now` - Generates an image prompt and posts it immediately.
+
+---
 
 ## Example Usage
 
-`node run start` - Will start the bot in normal operation.
+`npm run bot` will run the bot in a loop, tooting, mentioning, and posting images.
 
-`node app.js --run-now --no-loop --post-image --prompt "A robot mastodon typing at a computer"` - Will generate an image from the supplied prompt and post it, then exit.
+`npm run bot-mention` will run the bot in a loop, mentioning but not tooting or posting images.
 
-`node app.js --run-now --prompt "Write a toot about cute mastodons."` - Will generate a toot from the supplied prompt and post it, then continue looping on an interval. **The prompt will be used each loop**
+`npm run bot-image` will run the bot in a loop, posting images but not tooting or mentioning.
 
-## Mention reply
+`npm run bot-toot` will run the bot in a loop, tooting but not mentioning or posting images.
 
--   Bot can respond to direct messages from accounts it follows.
--   Configure `MASTODON_ACCOUNT_ID` in .env file
+`npm run single-toot` will run the bot once, tooting but not mentioning or posting images.
 
-`npm run mentions` - Runs daemon that checks for new notifications every minute and responds if following user
+`npm run single-image` will run the bot once, posting images but not tooting or mentioning.
 
-`npm run mentions-once` - Will check and respond to notifications once then exit
+`npm run single-mention` will run the bot once, mentioning but not tooting or posting images.
 
-`npm run mentions-server` - Will run the mentions.js file in the background using nohup, and pipe output to logs/bot-log.log
-
--   `watch tail -f logs/bot-log.log` - Streams the new lines of the log file to your current terminal.
+`npm run tail-logs` will stream the new bot logs to your terminal. **Depends on the `watch` command being installed**
 
 ---
+
+## Mention Commands
+
+The bot supports the following commands when responding to a mention:
+
+_command must be at the beginning of the mention (after the @mention)_
+
+-   "//image//" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//help//" or "//commands//" - Posts a list of commands in reply
+
+### Example
+
+`@chatGPToot //image// a cat eating a taco`
+
+![a cat eating a taco](static/taco_cat.png "indeed, a cat eating a taco.")
