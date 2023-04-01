@@ -2,16 +2,18 @@
     "name": "ChatGPToot",
     "version": "2.0.0",
     "description": "A Mastodon social bot powered by OpenAI.",
-    "main": "chatgptoot.js",
+    "main": "app/chatgptoot.js",
     "scripts": {
-        "bot": "nohup node chatgptoot.js > logs/bot-log.log 2>&1 &",
-        "bot-mention": "nohup node chatgptoot.js --no-toot --no-image > logs/bot-log.log 2>&1 &",
-        "bot-image": "nohup node chatgptoot.js --no-toot --no-mention > logs/bot-log.log 2>&1 &",
-        "bot-toot": "nohup node chatgptoot.js --no-image --no-mention > logs/bot-log.log 2>&1 &",
-        "single-toot": "node chatgptoot.js --no-loop --no-image --no-mention --toot-now",
-        "single-image": "node chatgptoot.js --no-loop --no-mention --no-toot --image-now",
-        "single-mention": "node chatgptoot.js --no-loop --no-toot --no-image",
-        "tail-logs": "watch tail -f logs/bot-log.log"
+        "setup": "node app/setup.js",
+        "bot": "nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &",
+        "bot-mention": "nohup node app/chatgptoot.js --no-toot --no-image > logs/bot-log.log 2>&1 &",
+        "bot-image": "nohup node app/chatgptoot.js --no-toot --no-mention > logs/bot-log.log 2>&1 &",
+        "bot-toot": "nohup node app/chatgptoot.js --no-image --no-mention > logs/bot-log.log 2>&1 &",
+        "single-toot": "node app/chatgptoot.js --no-loop --no-image --no-mention --toot-now",
+        "single-image": "node app/chatgptoot.js --no-loop --no-mention --no-toot --image-now",
+        "single-mention": "node app/chatgptoot.js --no-loop --no-toot --no-image",
+        "tail-logs": "tail -f logs/bot-log.log",
+        "usage": "node app/usage_log_summary.js"
     },
     "keywords": [
         "mastodon",
@@ -21,6 +23,7 @@
     "author": "Joe Peterson (@skullzarmy@mastodon.social)",
     "license": "MIT",
     "dependencies": {
+        "date-fns": "^2.29.3",
         "dotenv": "^16.0.3",
         "mastodon": "^1.2.2",
         "openai": "^3.2.1"

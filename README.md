@@ -46,7 +46,7 @@
 
 `npm run single-mention` will run the bot once, mentioning but not tooting or posting images.
 
-`npm run tail-logs` will stream the new bot logs to your terminal. **Depends on the `watch` command being installed**
+`npm run tail-logs` will stream the new bot logs to your terminal.
 
 ---
 
