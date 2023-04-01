@@ -7,6 +7,7 @@
 ## Installation
 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
+-   `npm install` to initiate node and install dependencies
 -   `npm run setup` will create needed folders and `.env` file
 -   edit `.env` file and add your credentials
 
