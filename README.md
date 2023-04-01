@@ -64,3 +64,15 @@ _command must be at the beginning of the mention (after the @mention)_
 `@chatGPToot //image// a cat eating a taco`
 
 ![a cat eating a taco](static/taco_cat.png "indeed, a cat eating a taco.")
+
+---
+
+## License
+
+This project is released under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the source code, subject to the terms and conditions of the license.
+
+The [MIT License](LICENSE.txt) is a permissive open-source software license that allows you to use this project for any purpose, including commercial use. By using this project, you agree to retain the original copyright notice and the full license text in all copies or substantial portions of the software.
+
+We encourage collaboration and contribution to the project. Feel free to fork, modify, and share your improvements with the community. Our goal is to make this software as useful and accessible as possible, and your contributions will help us achieve that.
+
+Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
