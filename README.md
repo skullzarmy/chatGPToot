@@ -106,10 +106,6 @@ Consider adding error handling for async functions such as postToot, dismissNoti
 
 Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
 
-## Environment variable usage:
-
-It's a good practice to handle cases where required environment variables are not set. You can add a check at the beginning of the script to ensure all required environment variables are available, and if not, terminate the script with an appropriate error message.
-
 ## fetchConversation function:
 
 The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
