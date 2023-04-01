@@ -175,6 +175,13 @@ async function handleImageCommand(mention, prompt) {
                     });
                 logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
             }
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                } else {
+                    console.log("File deleted:", filepath);
+                }
+            });
         });
     } catch (error) {
         console.error(`OpenAI Error: ${JSON.stringify(error)}`);
