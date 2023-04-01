@@ -133,7 +133,7 @@ async function handleImageCommand(mention, prompt) {
                         visibility: "public",
                     })
                     .then((tootResponse) => {
-                        console.log("Toot with image posted:", tootResponse.data);
+                        console.log("Toot with image posted:", tootResponse.data.uri);
                     })
                     .catch((error) => {
                         console.error("Error posting toot with image:", error);
@@ -148,7 +148,7 @@ async function handleImageCommand(mention, prompt) {
                         visibility: "public",
                     })
                     .then((tootResponse) => {
-                        console.log("Toot with image posted:", tootResponse.data);
+                        console.log("Toot with image posted:", tootResponse.data.uri);
                     })
                     .catch((error) => {
                         console.error("Error posting toot with image:", error);
