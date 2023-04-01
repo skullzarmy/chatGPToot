@@ -9,6 +9,19 @@ const { Group } = require("bottleneck");
 const { logUsage } = require("./usage_logger");
 const { logFeedback } = require("./feedback_logger");
 
+const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
+let missingVars = [];
+requiredEnvVars.forEach((envVarName) => {
+    if (!process.env[envVarName]) {
+        missingVars.push(envVarName);
+    }
+});
+if (missingVars.length > 0) {
+    console.error("Missing the following required environment variables. Please check your .env file.");
+    console.error(missingVars);
+    process.exit(1);
+}
+
 const mastodon = new M({
     access_token: process.env.MASTODON_ACCESS_TOKEN,
     api_url: process.env.MASTODON_API_URL,

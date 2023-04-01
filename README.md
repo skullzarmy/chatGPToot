@@ -114,10 +114,6 @@ It's a good practice to handle cases where required environment variables are no
 
 The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
 
-## Cleanup of downloaded images:
-
-In the handleImageCommand function, you download images to a local folder, but there is no cleanup process to delete these images after they are posted. Consider adding a cleanup function that removes these images after they have been successfully posted to Mastodon.
-
 ## Use of fs library:
 
 fs is a deprecated library, and it is recommended to use the newer fs/promises library instead for handling file system operations with promises.
