@@ -7,8 +7,8 @@
 ## Installation
 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
--   Copy the .env-example file to .env: `cp .env-example .env`
--   Fill in the .env file with your Mastodon access token, Mastodon API URL, Mastodon Account ID, and OpenAI API key.
+-   `npm run setup` will create needed folders and `.env` file
+-   edit `.env` file and add your credentials
 
 ---
 
@@ -64,6 +64,14 @@ _command must be at the beginning of the mention (after the @mention)_
 `@chatGPToot //image// a cat eating a taco`
 
 ![a cat eating a taco](static/taco_cat.png "indeed, a cat eating a taco.")
+
+---
+
+## Usage Logging Utilities
+
+By default, the bot will log all usage to logs/usage_logs.json
+
+`npm run usage` will print and save a usage summary to
 
 ---
 
