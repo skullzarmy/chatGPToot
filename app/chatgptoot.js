@@ -126,7 +126,7 @@ async function handleImageCommand(mention, prompt) {
     try {
         const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
         const imageUrl = response.data.data[0].url;
-        const tokens = response.data.choices[0].tokens; // Store tokens value here
+        const tokens = "unknown";
 
         const filename = `new_toot_${Date.now()}.png`;
         const filepath = path.join(__dirname, "..", "media", filename);
