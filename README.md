@@ -57,7 +57,9 @@ The bot supports the following commands when responding to a mention:
 
 _command must be at the beginning of the mention (after the @mention)_
 
--   "//image//" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//feedback// {feedback}" - Logs user feedback for review
+-   "//beta-application//" - Posts the application link to the user
 -   "//help//" or "//commands//" - Posts a list of commands in reply
 
 ### Example
