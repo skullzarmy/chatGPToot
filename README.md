@@ -72,7 +72,7 @@ _command must be at the beginning of the mention (after the @mention)_
 
 By default, the bot will log all usage to logs/usage_logs.json
 
-`npm run usage` will print and save a usage summary to
+`npm run usage` will print and save a usage summary to `reports/`
 
 ---
 

@@ -1,9 +1,15 @@
 const fs = require("fs");
 const path = require("path");
 
-const usageLogFile = path.join(__dirname, "..", "logs", "usage_log.json");
+const logsDirectory = path.join(__dirname, "..", "logs");
+const today = new Date().toISOString().slice(0, 10);
+const usageLogFile = path.join(logsDirectory, `usage_log_${today}.json`);
 
 function readUsageLog() {
+    if (!fs.existsSync(usageLogFile)) {
+        console.log(`Creating new usage log file: ${usageLogFile}`);
+        fs.writeFileSync(usageLogFile, JSON.stringify({ users: [] }));
+    }
     return JSON.parse(fs.readFileSync(usageLogFile, "utf-8"));
 }
 
