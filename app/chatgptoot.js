@@ -126,6 +126,7 @@ async function handleImageCommand(mention, prompt) {
     try {
         const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
         const imageUrl = response.data.data[0].url;
+        const tokens = response.data.choices[0].tokens; // Store tokens value here
 
         const filename = `new_toot_${Date.now()}.png`;
         const filepath = path.join(__dirname, "..", "media", filename);
@@ -143,25 +144,24 @@ async function handleImageCommand(mention, prompt) {
                     0,
                     484 - mention.account.username.length
                 )}`;
-                const tootResponse = await mastodon
+                await mastodon
                     .post("statuses", {
                         status: tootText,
                         in_reply_to_id: mention.status.id,
                         media_ids: [mediaId],
                         visibility: "public",
                     })
-                    .then((resp) => {
-                        console.log("Toot with image posted:", resp.data.uri);
+                    .then((tootResponse) => {
+                        console.log("Toot with image posted:", tootResponse.data.uri);
                     })
                     .catch((error) => {
                         console.error("Error posting toot with image:", error);
                     });
                 await dismissNotification(mention.id);
-                const tokens = tootResponse.data.choices[0].message.tokens;
                 logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
             } else {
                 const tootText = `Image prompt: ${prompt.substring(0, 486)}`;
-                const tootResponse = await mastodon
+                await mastodon
                     .post("statuses", {
                         status: tootText,
                         media_ids: [mediaId],
@@ -173,7 +173,6 @@ async function handleImageCommand(mention, prompt) {
                     .catch((error) => {
                         console.error("Error posting toot with image:", error);
                     });
-                const tokens = tootResponse.data.choices[0].message.tokens;
                 logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
             }
         });
