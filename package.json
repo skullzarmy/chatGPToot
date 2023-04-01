@@ -23,6 +23,7 @@
     "author": "Joe Peterson (@skullzarmy@mastodon.social)",
     "license": "MIT",
     "dependencies": {
+        "bottleneck": "^2.19.5",
         "date-fns": "^2.29.3",
         "dotenv": "^16.0.3",
         "mastodon": "^1.2.2",

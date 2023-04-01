@@ -87,3 +87,37 @@ The [MIT License](LICENSE.txt) is a permissive open-source software license that
 We encourage collaboration and contribution to the project. Feel free to fork, modify, and share your improvements with the community. Our goal is to make this software as useful and accessible as possible, and your contributions will help us achieve that.
 
 Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
+
+---
+
+---
+
+---
+
+## GPT-4 Suggested Improvements
+
+Overall, the script looks well-structured and functional. However, I found a few improvements and potential issues that should be addressed:
+
+## Error handling:
+
+Consider adding error handling for async functions such as postToot, dismissNotification, getFollowing, and getTrendingTags to catch any errors from the API calls.
+
+## Function naming consistency:
+
+Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
+
+## Environment variable usage:
+
+It's a good practice to handle cases where required environment variables are not set. You can add a check at the beginning of the script to ensure all required environment variables are available, and if not, terminate the script with an appropriate error message.
+
+## fetchConversation function:
+
+The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
+
+## Cleanup of downloaded images:
+
+In the handleImageCommand function, you download images to a local folder, but there is no cleanup process to delete these images after they are posted. Consider adding a cleanup function that removes these images after they have been successfully posted to Mastodon.
+
+## Use of fs library:
+
+fs is a deprecated library, and it is recommended to use the newer fs/promises library instead for handling file system operations with promises.

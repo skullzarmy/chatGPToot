@@ -5,6 +5,7 @@ const M = require("mastodon");
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
+const { Group } = require("bottleneck");
 const { logUsage } = require("./usage_logger");
 const { logFeedback } = require("./feedback_logger");
 
@@ -26,6 +27,11 @@ const messages = [
 
 const MAX_TOKENS = 3000; // You can adjust this value based on your requirements
 
+const rateLimiterGroup = new Group({
+    maxConcurrent: 1, // Only 1 request per user at a time
+    minTime: 1000, // 1 second between requests
+});
+
 function downloadImage(url, dest, cb) {
     request.head(url, function (err, res, body) {
         request(url).pipe(fs.createWriteStream(dest)).on("close", cb);
@@ -46,6 +52,12 @@ function dismissNotification(id) {
 
 function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
+}
+
+async function getTrendingTags() {
+    const response = await mastodon.get("trends/tags");
+    const tags = response.data.map((tag) => tag.name);
+    return tags;
 }
 
 async function fetchConversation(statusId, messages = [], tokens = 0) {
@@ -270,6 +282,12 @@ async function generateToot() {
         },
     ];
 
+    const trendingTags = await getTrendingTags();
+    msg.push({
+        role: "system",
+        content: `Here are some currently trending tags in order of popularity. If you use one, remember to place a '#' in front of it: ${trendingTags}`,
+    });
+
     const response = await openai.createChatCompletion({
         model: "gpt-3.5-turbo",
         messages: msg,
@@ -291,7 +309,10 @@ async function checkMentions() {
             const following = followingResponse.data;
 
             for (const mention of notifications.data) {
-                await processMention(mention, following);
+                const userId = mention.account.id;
+                const rateLimiter = rateLimiterGroup.key(userId);
+
+                rateLimiter.schedule(() => processMention(mention, following));
             }
         }
     } catch (error) {
