@@ -256,13 +256,13 @@ async function main() {
             let imageLoop = setInterval(() => {
                 const prompt = generateImagePrompt();
                 handleImageCommand(null, prompt);
-            }, 7200000); // 2 hours
+            }, 28800000); // 8 hours
         }
         if (!noToot) {
             let tootLoop = setInterval(() => {
                 const toot = generateToot();
                 postToot(toot, "public", null);
-            }, 3600000); // 1 hour
+            }, 28800000); // 8 hours
         }
     }
     if (tootNow) {
