@@ -125,24 +125,35 @@ async function handleImageCommand(mention, prompt) {
                     0,
                     484 - mention.account.username.length
                 )}`;
-                const tootResponse = await mastodon.post("statuses", {
-                    status: tootText,
-                    in_reply_to_id: mention.status.id,
-                    media_ids: [mediaId],
-                    visibility: "public",
-                });
+                const tootResponse = await mastodon
+                    .post("statuses", {
+                        status: tootText,
+                        in_reply_to_id: mention.status.id,
+                        media_ids: [mediaId],
+                        visibility: "public",
+                    })
+                    .then((tootResponse) => {
+                        console.log("Toot with image posted:", tootResponse.data);
+                    })
+                    .catch((error) => {
+                        console.error("Error posting toot with image:", error);
+                    });
+                await dismissNotification(mention.id);
             } else {
                 const tootText = `Image prompt: ${prompt.substring(0, 486)}`;
-                const tootResponse = await mastodon.post("statuses", {
-                    status: tootText,
-                    media_ids: [mediaId],
-                    visibility: "public",
-                });
+                const tootResponse = await mastodon
+                    .post("statuses", {
+                        status: tootText,
+                        media_ids: [mediaId],
+                        visibility: "public",
+                    })
+                    .then((tootResponse) => {
+                        console.log("Toot with image posted:", tootResponse.data);
+                    })
+                    .catch((error) => {
+                        console.error("Error posting toot with image:", error);
+                    });
             }
-
-            console.log("Toot with image posted:", tootResponse.data);
-
-            await dismissNotification(mention.id);
         });
     } catch (error) {
         console.error(`OpenAI Error: ${JSON.stringify(error)}`);
@@ -253,24 +264,24 @@ async function main() {
             }, 15000); // 15 seconds
         }
         if (!noImage) {
-            let imageLoop = setInterval(() => {
-                const prompt = generateImagePrompt();
+            let imageLoop = setInterval(async () => {
+                const prompt = await generateImagePrompt();
                 handleImageCommand(null, prompt);
             }, 28800000); // 8 hours
         }
         if (!noToot) {
-            let tootLoop = setInterval(() => {
-                const toot = generateToot();
+            let tootLoop = setInterval(async () => {
+                const toot = await generateToot();
                 postToot(toot, "public", null);
             }, 28800000); // 8 hours
         }
     }
     if (tootNow) {
-        const toot = generateToot();
+        const toot = await generateToot();
         postToot(toot, "public", null);
     }
     if (imageNow) {
-        const prompt = generateImagePrompt();
+        const prompt = await generateImagePrompt();
         handleImageCommand(null, prompt);
     }
     if (!noMention) {

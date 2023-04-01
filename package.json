@@ -8,8 +8,8 @@
         "bot-mention": "nohup node chatgptoot.js --no-toot --no-image > logs/bot-log.log 2>&1 &",
         "bot-image": "nohup node chatgptoot.js --no-toot --no-mention > logs/bot-log.log 2>&1 &",
         "bot-toot": "nohup node chatgptoot.js --no-image --no-mention > logs/bot-log.log 2>&1 &",
-        "single-toot": "node chatgptoot.js --no-loop --no-image --no-mention",
-        "single-image": "node chatgptoot.js --no-loop --no-mention --no-toot",
+        "single-toot": "node chatgptoot.js --no-loop --no-image --no-mention --toot-now",
+        "single-image": "node chatgptoot.js --no-loop --no-mention --no-toot --image-now",
         "single-mention": "node chatgptoot.js --no-loop --no-toot --no-image",
         "tail-logs": "watch tail -f logs/bot-log.log"
     },
