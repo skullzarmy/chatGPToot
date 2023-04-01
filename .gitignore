@@ -6,3 +6,7 @@
 media/*
 # Log folder contents
 logs/*
+# report folder contents
+report/*
+# feedback folder contents
+feedback/*

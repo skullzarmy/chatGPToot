@@ -2,7 +2,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Create folders if they don't exist
-const foldersToCreate = ["media", "logs", "reports"];
+const foldersToCreate = ["media", "logs", "reports", "feedback"];
 const appRootPath = path.join(__dirname, "..");
 foldersToCreate.forEach((folder) => {
     const folderPath = path.join(appRootPath, folder);

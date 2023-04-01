@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const request = require("request");
 const { logUsage } = require("./usage_logger");
+const { logFeedback } = require("./feedback_logger");
 
 const mastodon = new M({
     access_token: process.env.MASTODON_ACCESS_TOKEN,
@@ -93,13 +94,17 @@ async function processMention(mention, following) {
             handleImageCommand(mention, prompt);
         } else if (command === "//help//" || command === "//commands//") {
             handleHelpCommand(mention);
+        } else if (command === "//feedback//") {
+            handleFeedbackCommand(mention, prompt);
+        } else if (command === "//beta-application//") {
+            handleBetaApplicationCommand(mention);
         } else {
             handleRegularMention(mention);
         }
     } else {
         console.log("Not following user.");
         const reply =
-            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. Please let us know if you would like to help us test this bot and how you would like to use it to be considered.";
+            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. If you would like to help us test, you can apply at https://forms.gle/EpfnksenW4xbdcE4A";
         await postToot(reply, "public", mention.status.id);
         await dismissNotification(mention.id);
     }
@@ -167,7 +172,16 @@ async function handleImageCommand(mention, prompt) {
 
 async function handleHelpCommand(mention) {
     await postToot(
-        `Hello, @${mention.account.username} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//. Example: //image// a cat eating a taco`,
+        `Hello, @${mention.account.username} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
+        "public",
+        mention.status.id
+    );
+    await dismissNotification(mention.id);
+}
+
+async function handleBetaApplicationCommand(mention) {
+    await postToot(
+        `Hello, @${mention.account.username} If you would like to help us test this bot, please apply at https://forms.gle/EpfnksenW4xbdcE4A.`,
         "public",
         mention.status.id
     );
@@ -204,6 +218,20 @@ async function handleRegularMention(mention) {
         }
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
+    }
+}
+
+async function handleFeedbackCommand(mention, prompt) {
+    try {
+        logFeedback(mention.account.id, mention.status.id, prompt);
+        await postToot(
+            `Thank you for your feedback, @${mention.account.username}! I have logged it and will use it to improve the bot.`,
+            "public",
+            mention.status.id
+        );
+        await dismissNotification(mention.id);
+    } catch (error) {
+        console.error(`Feedback Error: ${error}`);
     }
 }
 
