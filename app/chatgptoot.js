@@ -94,6 +94,14 @@ function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
 }
 
+function isAdmin(userId) {
+    if (!process.env.MASTODON_ADMIN_ACCOUNT_IDS) {
+        return false;
+    } else {
+        return process.env.MASTODON_ADMIN_ACCOUNT_IDS.split(",").includes(userId);
+    }
+}
+
 async function getTrendingTags() {
     const response = await mastodon.get("trends/tags");
     const tags = response.data.map((tag) => tag.name);
@@ -155,6 +163,12 @@ async function processMention(mention, following) {
                 break;
             case "//beta-application//":
                 handleBetaApplicationCommand(mention).catch((error) => console.error(error));
+                break;
+            case "//toot-now//":
+                handleTootNowCommand(mention, prompt).catch((error) => console.error(error));
+                break;
+            case "//image-now//":
+                handleImageNowCommand(mention, prompt).catch((error) => console.error(error));
                 break;
             default:
                 handleRegularMention(mention).catch((error) => console.error(error));
@@ -326,6 +340,58 @@ async function handleFeedbackCommand(mention, prompt) {
             resolve();
         } catch (error) {
             console.error(`Feedback Error: ${error}`);
+            reject(error);
+        }
+    });
+}
+
+async function handleTootNowCommand(mention, prompt) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const is_admin = await isAdmin(mention.account.id);
+            if (!is_admin) {
+                await postToot(
+                    `Sorry, @${mention.account.username} you are not authorized to use this command.`,
+                    "public",
+                    mention.status.id
+                );
+                await dismissNotification(mention.id);
+                resolve();
+                return;
+            } else {
+                const genToot = await generateToot(prompt);
+                await postToot(genToot, "public", mention.status.id);
+                await dismissNotification(mention.id);
+                resolve();
+            }
+        } catch (error) {
+            console.error(`Toot Now Error: ${error}`);
+            reject(error);
+        }
+    });
+}
+
+async function handleImageNowCommand(mention, prompt) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const is_admin = await isAdmin(mention.account.id);
+            if (!is_admin) {
+                await postToot(
+                    `Sorry, @${mention.account.username} you are not authorized to use this command.`,
+                    "public",
+                    mention.status.id
+                );
+                await dismissNotification(mention.id);
+                resolve();
+                return;
+            } else {
+                const genImage = await generateImagePrompt(prompt);
+                await postImage(genImage, "public", mention.status.id);
+                await dismissNotification(mention.id);
+                resolve();
+            }
+        } catch (error) {
+            console.error(`Image Now Error: ${error}`);
             reject(error);
         }
     });
