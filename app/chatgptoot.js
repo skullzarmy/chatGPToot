@@ -54,11 +54,12 @@ function downloadImage(url, dest, cb) {
 function postToot(status, visibility, in_reply_to_id) {
     return new Promise(async (resolve, reject) => {
         try {
-            const result = await mastodon.post("statuses", {
+            const params = {
                 status,
                 visibility,
-                in_reply_to_id,
-            });
+                ...(in_reply_to_id ? { in_reply_to_id } : {}),
+            };
+            const result = await mastodon.post("statuses", params);
             resolve(result);
         } catch (error) {
             reject(`Error posting toot: ${error}`);
