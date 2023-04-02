@@ -51,6 +51,18 @@ function downloadImage(url, dest, cb) {
     });
 }
 
+async function addContext(msgs) {
+    const topTags = await getTrendingTags();
+    const date = new Date();
+    const systemMessage = {
+        role: "system",
+        content: `The current date is ${date.toLocaleString("en-US", {
+            timeZone: "UTC",
+        })} in UTC. The top tags are ${topTags.join(", ")}.`,
+    };
+    msgs.push(systemMessage);
+}
+
 function postToot(status, visibility, in_reply_to_id) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -274,6 +286,8 @@ async function handleRegularMention(mention) {
             };
             conversation.push(systemMessage);
 
+            await addContext(conversation);
+
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
                 messages: conversation,
@@ -361,11 +375,7 @@ async function generateToot() {
                 },
             ];
 
-            const trendingTags = await getTrendingTags();
-            msg.push({
-                role: "system",
-                content: `Here are some currently trending tags in order of popularity. If you use one, remember to place a '#' in front of it: ${trendingTags}`,
-            });
+            await addContext(msg);
 
             const response = await openai.createChatCompletion({
                 model: "gpt-3.5-turbo",
