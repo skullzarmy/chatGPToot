@@ -29,3 +29,5 @@ function logFeedback(userId, statusId, content) {
 module.exports = {
     logFeedback,
 };
+
+// TODO: mastodon ping admins when feedback is logged

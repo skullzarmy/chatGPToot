@@ -8,6 +8,7 @@ const request = require("request");
 const { Group } = require("bottleneck");
 const { logUsage } = require("./usage_logger");
 const { logFeedback } = require("./feedback_logger");
+const redis = require("redis");
 
 const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
 let missingVars = [];
@@ -40,10 +41,46 @@ const messages = [
 
 const MAX_TOKENS = 3000; // You can adjust this value based on your requirements
 
-const rateLimiterGroup = new Group({
-    maxConcurrent: 1, // Only 1 request per user at a time
-    minTime: 1000, // 1 second between requests
-});
+const createRateLimiterGroup = async () => {
+    try {
+        // Check if Redis is available
+        const client = redis.createClient({
+            host: "localhost",
+            port: 6379,
+        });
+
+        await new Promise((resolve, reject) => {
+            client.on("error", reject);
+            client.on("ready", resolve);
+        });
+
+        // Use Redis connection for Bottleneck
+        const connection = new Bottleneck.IORedisConnection({
+            client: client,
+        });
+
+        console.log("Using Redis for rate limiting.");
+        return new Group({
+            connection: connection,
+            maxConcurrent: 1, // Only 1 request per user at a time
+            minTime: 15000, // 15 seconds between requests
+            reservoir: 50, // tokens per user
+            reservoirRefreshAmount: 50,
+            reservoirIncreaseMaximum: 50,
+            reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
+        });
+    } catch (error) {
+        console.log("Redis not available, falling back to local rate limiting.");
+        return new Group({
+            maxConcurrent: 1, // Only 1 request per user at a time
+            minTime: 15000, // 15 seconds between requests
+            reservoir: 50, // tokens per user
+            reservoirRefreshAmount: 50,
+            reservoirIncreaseMaximum: 50,
+            reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
+        });
+    }
+};
 
 function downloadImage(url, dest, cb) {
     request.head(url, function (err, res, body) {
@@ -176,7 +213,7 @@ async function processMention(mention, following) {
     } else {
         console.log("Not following user.");
         const reply =
-            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. If you would like to help us test, you can apply at https://forms.gle/EpfnksenW4xbdcE4A";
+            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7";
         postToot(reply, "public", mention.status.id)
             .then(() => dismissNotification(mention.id))
             .catch((error) => console.error(error));
@@ -275,7 +312,7 @@ async function handleBetaApplicationCommand(mention) {
     return new Promise(async (resolve, reject) => {
         try {
             await postToot(
-                `Hello, @${mention.account.username} If you would like to help us test this bot, please apply at https://forms.gle/EpfnksenW4xbdcE4A.`,
+                `Hello, @${mention.account.username} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
                 "public",
                 mention.status.id
             );
@@ -360,7 +397,7 @@ async function handleTootNowCommand(mention, prompt) {
                 return;
             } else {
                 const genToot = await generateToot(prompt);
-                await postToot(genToot, "public", mention.status.id);
+                await postToot(genToot, "public", null);
                 await dismissNotification(mention.id);
                 resolve();
             }
@@ -386,7 +423,7 @@ async function handleImageNowCommand(mention, prompt) {
                 return;
             } else {
                 const genImage = await generateImagePrompt(prompt);
-                await postImage(genImage, "public", mention.status.id);
+                await handleImageCommand(null, genImage);
                 await dismissNotification(mention.id);
                 resolve();
             }
@@ -530,4 +567,6 @@ async function main() {
     }
 }
 
-main();
+createRateLimiterGroup().then((rateLimiterGroup) => {
+    main();
+});
