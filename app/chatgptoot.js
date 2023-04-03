@@ -545,13 +545,13 @@ async function main() {
             let imageLoop = setInterval(async () => {
                 const prompt = await generateImagePrompt();
                 handleImageCommand(null, prompt);
-            }, 28800000); // 8 hours
+            }, 43200000); // 12 hours
         }
         if (!noToot) {
             let tootLoop = setInterval(async () => {
                 const toot = await generateToot();
                 postToot(toot, "public", null);
-            }, 28800000); // 8 hours
+            }, 43200000); // 12 hours
         }
     }
     if (tootNow) {
