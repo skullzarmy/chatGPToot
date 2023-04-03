@@ -503,27 +503,18 @@ async function checkMentions() {
     });
 }
 
-function scheduleTasks(noToot, noImage) {
-    if (!noImage) {
-        imageCronJobs = imageTimes.map((time) => {
-            return cron.schedule(time, () => {
-                const prompt = await generateImagePrompt();
-                handleImageCommand(null, prompt);
-                const now = moment().tz("America/Los_Angeles");
-                console.log(`Image loop called at ${now.format()}`);
-            });
-        });
-    }
-    if (!noToot) {
-        tootCronJobs = tootTimes.map((time) => {
-            return cron.schedule(time, () => {
-                const toot = await generateToot();
-                postToot(toot, "public", null);
-                const now = moment().tz("America/Los_Angeles");
-                console.log(`Toot loop called at ${now.format()}`);
-            });
-        });
+async function handleImageLoop() {
+    const prompt = await generateImagePrompt();
+    handleImageCommand(null, prompt);
+    const now = moment().tz("America/Los_Angeles");
+    console.log(`Image loop called at ${now.format()}`);
 }
+
+async function handleTootLoop() {
+    const toot = await generateToot();
+    postToot(toot, "public", null);
+    const now = moment().tz("America/Los_Angeles");
+    console.log(`Toot loop called at ${now.format()}`);
 }
 
 async function main() {
@@ -536,28 +527,30 @@ async function main() {
     const imageNow = args.includes("--image-now");
 
     if (!noLoop) {
+        let mentionCronJob;
+
         if (!noMention) {
-            let mentionLoop = setInterval(() => {
+            const mentionInterval = "*/5 * * * *"; // Check mentions every 5 minutes
+            mentionCronJob = cron.schedule(mentionInterval, () => {
                 checkMentions();
-            }, 15000); // 15 seconds
+            });
         }
+
         let imageCronJobs = [];
         let tootCronJobs = [];
 
-        const imageTimes = ["0 12 * * *", "0 15 * * *", "0 18 * * *"]; // Pacific local time
-        const tootTimes = ["0 13 * * *", "0 16 * * *", "0 19 * * *"]; // Pacific local time
+        const imageTimes = ["0 9 * * *", "5 12 * * *", "0 16 * * *", "5 21 * * *"]; // Pacific local time
+        const tootTimes = ["0 8 * * *", "0 12 * * *", "0 17 * * *", "0 21 * * *"]; // Pacific local time
 
         if (!noImage) {
-            let imageLoop = setInterval(async () => {
-                const prompt = await generateImagePrompt();
-                handleImageCommand(null, prompt);
-            }, 43200000); // 12 hours
+            imageCronJobs = imageTimes.map((time) => {
+                return cron.schedule(time, handleImageLoop);
+            });
         }
         if (!noToot) {
-            let tootLoop = setInterval(async () => {
-                const toot = await generateToot();
-                postToot(toot, "public", null);
-            }, 43200000); // 12 hours
+            tootCronJobs = tootTimes.map((time) => {
+                return cron.schedule(time, handleTootLoop);
+            });
         }
     }
     if (tootNow) {
