@@ -527,32 +527,41 @@ async function main() {
     const imageNow = args.includes("--image-now");
 
     if (!noLoop) {
-        let mentionCronJob;
-
         if (!noMention) {
-            const mentionInterval = "*/5 * * * *"; // Check mentions every 5 minutes
+            let mentionCronJob;
+            const mentionInterval = "*/15 * * * * *"; // Check mentions every 15 seconds
             mentionCronJob = cron.schedule(mentionInterval, () => {
                 checkMentions();
             });
         }
 
-        let imageCronJobs = [];
-        let tootCronJobs = [];
-
-        const imageTimes = ["0 9 * * *", "5 12 * * *", "0 16 * * *", "5 21 * * *"]; // Pacific local time
-        const tootTimes = ["0 8 * * *", "0 12 * * *", "0 17 * * *", "0 21 * * *"]; // Pacific local time
-
         if (!noImage) {
+            let imageCronJobs = [];
+            const imageTimes = [
+                "0 9 * * *", // 9:00 AM Pacific local time
+                "5 12 * * *", // 12:05 PM Pacific local time
+                "0 16 * * *", // 4:00 PM Pacific local time
+                "5 21 * * *", // 9:05 PM Pacific local time
+            ];
             imageCronJobs = imageTimes.map((time) => {
                 return cron.schedule(time, handleImageLoop);
             });
         }
+
         if (!noToot) {
+            let tootCronJobs = [];
+            const tootTimes = [
+                "0 8 * * *", // 8:00 AM Pacific local time
+                "0 12 * * *", // 12:00 PM Pacific local time
+                "0 17 * * *", // 5:00 PM Pacific local time
+                "0 21 * * *", // 9:00 PM Pacific local time
+            ];
             tootCronJobs = tootTimes.map((time) => {
                 return cron.schedule(time, handleTootLoop);
             });
         }
     }
+
     if (tootNow) {
         const toot = await generateToot();
         postToot(toot, "public", null);
