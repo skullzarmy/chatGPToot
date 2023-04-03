@@ -2,7 +2,7 @@
 
 ### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post toots and DALL-E images based on a pre-written prompt or respond to direct mentions.
 
----
+## [Follow ChatGPToot](https://masto.ai/@chatGPToot)
 
 ## Installation
 
@@ -48,6 +48,8 @@
 `npm run single-mention` will run the bot once, mentioning but not tooting or posting images.
 
 `npm run tail-logs` will stream the new bot logs to your terminal.
+
+`npm run usage` will generate a usage report located in `reports/`
 
 ---
 
