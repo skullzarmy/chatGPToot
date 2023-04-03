@@ -2,13 +2,13 @@ const dotenv = require("dotenv");
 dotenv.config();
 const { Configuration, OpenAIApi } = require("openai");
 const M = require("mastodon");
-const fs = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
 const request = require("request");
 const { Group } = require("bottleneck");
 const { logUsage } = require("./usage_logger");
 const { logFeedback } = require("./feedback_logger");
-const redis = require("redis");
+// const redis = require("redis");
 
 const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
 let missingVars = [];
@@ -342,6 +342,7 @@ async function handleFeedbackCommand(mention, prompt) {
                 mention.status.id
             );
             await dismissNotification(mention.id);
+            // TODO: mastodon ping admins when feedback is logged
             resolve();
         } catch (error) {
             console.error(`Feedback Error: ${error}`);

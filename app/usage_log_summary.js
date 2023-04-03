@@ -1,4 +1,4 @@
-const fs = require("fs");
+const fs = require("fs/promises");
 const path = require("path");
 const { parseISO } = require("date-fns");
 const { format } = require("date-fns");
