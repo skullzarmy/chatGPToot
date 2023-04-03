@@ -41,46 +41,14 @@ const messages = [
 
 const MAX_TOKENS = 3000; // You can adjust this value based on your requirements
 
-const createRateLimiterGroup = async () => {
-    try {
-        // Check if Redis is available
-        const client = redis.createClient({
-            host: "localhost",
-            port: 6379,
-        });
-
-        await new Promise((resolve, reject) => {
-            client.on("error", reject);
-            client.on("ready", resolve);
-        });
-
-        // Use Redis connection for Bottleneck
-        const connection = new Bottleneck.IORedisConnection({
-            client: client,
-        });
-
-        console.log("Using Redis for rate limiting.");
-        return new Group({
-            connection: connection,
-            maxConcurrent: 1, // Only 1 request per user at a time
-            minTime: 15000, // 15 seconds between requests
-            reservoir: 50, // tokens per user
-            reservoirRefreshAmount: 50,
-            reservoirIncreaseMaximum: 50,
-            reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
-        });
-    } catch (error) {
-        console.log("Redis not available, falling back to local rate limiting.");
-        return new Group({
-            maxConcurrent: 1, // Only 1 request per user at a time
-            minTime: 15000, // 15 seconds between requests
-            reservoir: 50, // tokens per user
-            reservoirRefreshAmount: 50,
-            reservoirIncreaseMaximum: 50,
-            reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
-        });
-    }
-};
+const rateLimiterGroup = new Group({
+    maxConcurrent: 1, // Only 1 request per user at a time
+    minTime: 15000, // 15 seconds between requests
+    reservoir: 50, // tokens per user
+    reservoirRefreshAmount: 50,
+    reservoirIncreaseMaximum: 50,
+    reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
+});
 
 function downloadImage(url, dest, cb) {
     request.head(url, function (err, res, body) {
@@ -567,6 +535,4 @@ async function main() {
     }
 }
 
-createRateLimiterGroup().then((rateLimiterGroup) => {
-    main();
-});
+main();
