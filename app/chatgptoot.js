@@ -342,7 +342,13 @@ async function handleFeedbackCommand(mention, prompt) {
                 mention.status.id
             );
             await dismissNotification(mention.id);
-            // TODO: mastodon ping admins when feedback is logged
+            if (process.env.MASTODON_ADMIN_ALERT_USERNAME) {
+                await postToot(
+                    `${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`,
+                    "public",
+                    null
+                );
+            }
             resolve();
         } catch (error) {
             console.error(`Feedback Error: ${error}`);

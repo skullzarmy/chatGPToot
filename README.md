@@ -109,10 +109,6 @@ Please note that this project is provided "as is" without any warranty or liabil
 
 Overall, the script looks well-structured and functional. However, I found a few improvements and potential issues that should be addressed:
 
-## Error handling:
-
-Consider adding error handling for async functions such as postToot, dismissNotification, getFollowing, and getTrendingTags to catch any errors from the API calls.
-
 ## Function naming consistency:
 
 Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
@@ -120,7 +116,3 @@ Some function names are in camelCase (e.g., handleImageCommand), while others us
 ## fetchConversation function:
 
 The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
-
-## Use of fs library:
-
-fs is a deprecated library, and it is recommended to use the newer fs/promises library instead for handling file system operations with promises.
