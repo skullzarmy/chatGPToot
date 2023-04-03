@@ -7,16 +7,14 @@ const usageLogFile = path.join(logsDirectory, `usage_log_${today}.json`);
 
 async function readUsageLog() {
     try {
-        if (!(await fs.access(usageLogFile))) {
-            console.log(`Creating new usage log file: ${usageLogFile}`);
-            await fs.writeFile(usageLogFile, JSON.stringify({ users: [] }));
-        }
-        const data = await fs.readFile(usageLogFile, "utf-8");
-        return JSON.parse(data);
+        await fs.access(usageLogFile);
     } catch (error) {
-        console.error("Error reading usage log file:", error);
-        throw error;
+        console.log(`Creating new usage log file: ${usageLogFile}`);
+        await fs.writeFile(usageLogFile, JSON.stringify({ users: [] }));
     }
+
+    const data = await fs.readFile(usageLogFile, "utf-8");
+    return JSON.parse(data);
 }
 
 async function writeUsageLog(data) {

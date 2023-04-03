@@ -563,12 +563,10 @@ async function main() {
     }
 
     if (tootNow) {
-        const toot = await generateToot();
-        postToot(toot, "public", null);
+        await handleTootLoop();
     }
     if (imageNow) {
-        const prompt = await generateImagePrompt();
-        handleImageCommand(null, prompt);
+        await handleImageLoop();
     }
     if (!noMention) {
         await checkMentions();
