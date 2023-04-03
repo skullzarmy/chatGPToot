@@ -27,6 +27,8 @@
         "date-fns": "^2.29.3",
         "dotenv": "^16.0.3",
         "mastodon": "^1.2.2",
+        "moment-timezone": "^0.5.43",
+        "node-cron": "^3.0.2",
         "openai": "^3.2.1",
         "redis": "^4.6.5"
     }

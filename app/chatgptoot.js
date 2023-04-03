@@ -6,6 +6,8 @@ const fs = require("fs/promises");
 const path = require("path");
 const request = require("request");
 const { Group } = require("bottleneck");
+const cron = require("node-cron");
+const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
 const { logFeedback } = require("./feedback_logger");
 // const redis = require("redis");
@@ -501,6 +503,29 @@ async function checkMentions() {
     });
 }
 
+function scheduleTasks(noToot, noImage) {
+    if (!noImage) {
+        imageCronJobs = imageTimes.map((time) => {
+            return cron.schedule(time, () => {
+                const prompt = await generateImagePrompt();
+                handleImageCommand(null, prompt);
+                const now = moment().tz("America/Los_Angeles");
+                console.log(`Image loop called at ${now.format()}`);
+            });
+        });
+    }
+    if (!noToot) {
+        tootCronJobs = tootTimes.map((time) => {
+            return cron.schedule(time, () => {
+                const toot = await generateToot();
+                postToot(toot, "public", null);
+                const now = moment().tz("America/Los_Angeles");
+                console.log(`Toot loop called at ${now.format()}`);
+            });
+        });
+}
+}
+
 async function main() {
     const args = process.argv.slice(2);
     const noLoop = args.includes("--no-loop");
@@ -516,6 +541,12 @@ async function main() {
                 checkMentions();
             }, 15000); // 15 seconds
         }
+        let imageCronJobs = [];
+        let tootCronJobs = [];
+
+        const imageTimes = ["0 12 * * *", "0 15 * * *", "0 18 * * *"]; // Pacific local time
+        const tootTimes = ["0 13 * * *", "0 16 * * *", "0 19 * * *"]; // Pacific local time
+
         if (!noImage) {
             let imageLoop = setInterval(async () => {
                 const prompt = await generateImagePrompt();
