@@ -2,7 +2,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 const { Configuration, OpenAIApi } = require("openai");
 const M = require("mastodon");
-const fs = require("fs/promises");
+const fs = require("fs");
 const path = require("path");
 const request = require("request");
 const { Group } = require("bottleneck");
