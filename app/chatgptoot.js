@@ -9,7 +9,7 @@ const { Group } = require("bottleneck");
 const cron = require("node-cron");
 const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
-const { logFeedback } = require("./feedback_logger");
+const { logFeedback, countFeedback } = require("./feedback_logger");
 // const redis = require("redis");
 
 const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
@@ -109,6 +109,43 @@ function isAdmin(userId) {
     }
 }
 
+async function getStatus() {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const date = new Date();
+            const countfeedback = await countFeedback();
+            const prompt = "This is a test.";
+            const response = await openai.complete({
+                engine: "text-davinci-003",
+                prompt,
+                max_tokens: 1,
+                temperature: 0,
+                top_p: 1,
+                n: 1,
+                stream: false,
+                logprobs: null,
+                stop: ["\n"],
+            });
+            let openAIStatus = "not working";
+
+            if (response.data.choices[0].text) {
+                openAIStatus = "working as expected";
+            }
+
+            const status = `The current date is ${moment(date)
+                .tz("UTC")
+                .format(
+                    "YYYY-MM-DD HH:mm:ss"
+                )} in UTC. There are ${countfeedback} logged feedback messages. The connection to OpenAI is ${openAIStatus}. Test response: ${
+                response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
+            }`;
+            resolve(status);
+        } catch (error) {
+            reject(`Error getting status: ${error}`);
+        }
+    });
+}
+
 async function getTrendingTags() {
     const response = await mastodon.get("trends/tags");
     const tags = response.data.map((tag) => tag.name);
@@ -178,6 +215,8 @@ async function processMention(mention, following) {
             case "//image-now//":
                 handleImageNowCommand(mention, prompt).catch((error) => console.error(error));
                 break;
+            case "//status//":
+                handleStatusCommand(mention).catch((error) => console.error(error));
             default:
                 handleRegularMention(mention).catch((error) => console.error(error));
         }
@@ -289,6 +328,29 @@ async function handleBetaApplicationCommand(mention) {
             resolve();
         } catch (error) {
             console.error("Error handling beta application command:", error);
+            reject(error);
+        }
+    });
+}
+
+async function handleStatusCommand(mention) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const is_admin = await isAdmin(mention.account.id);
+            if (!is_admin) {
+                await postToot(
+                    `Hello, @${mention.account.acct} You are not authorized to use this command.`,
+                    "public",
+                    mention.status.id
+                );
+                resolve();
+            } else {
+                const status = await getStatus();
+                await postToot(status, "public", mention.status.id);
+                resolve();
+            }
+        } catch (error) {
+            console.error("Error handling status command:", error);
             reject(error);
         }
     });
@@ -513,6 +575,7 @@ async function handleTootLoop() {
 }
 
 async function main() {
+    const botStartTime = moment().tz("UTC");
     const args = process.argv.slice(2);
     const noLoop = args.includes("--no-loop");
     const noImage = args.includes("--no-image");

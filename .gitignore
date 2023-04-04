@@ -1,4 +1,21 @@
+# Node.js dependencies
+node_modules/
+
+# Environment variables
 .env
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.bak
 
 # Local Netlify folder
 .netlify

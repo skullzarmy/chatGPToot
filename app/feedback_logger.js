@@ -43,6 +43,17 @@ async function logFeedback(userId, statusId, content) {
     }
 }
 
+async function countFeedback() {
+    try {
+        const feedbackData = await readFeedbackLog();
+        return feedbackData.feedback.length;
+    } catch (error) {
+        console.error("Error counting feedback:", error);
+        throw error;
+    }
+}
+
 module.exports = {
     logFeedback,
+    countFeedback,
 };

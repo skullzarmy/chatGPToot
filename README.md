@@ -110,10 +110,15 @@ Please note that this project is provided "as is" without any warranty or liabil
 
 Overall, the script looks well-structured and functional. However, I found a few improvements and potential issues that should be addressed:
 
-## Function naming consistency:
+### Function naming consistency:
 
 Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
 
-## fetchConversation function:
+### fetchConversation function:
 
 The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
+
+## To Do
+
+-   Implement redis for persistent bottleneck rate limiting
+-   Implement fs/promise in chatgptoot.js (download image broke)
