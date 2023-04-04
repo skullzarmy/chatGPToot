@@ -140,6 +140,7 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
 }
 
 async function processMention(mention, following) {
+    await dismissNotification(mention.id);
     const isFollowing = following.some((followed) => followed.id === mention.account.id);
 
     if (isFollowing) {
@@ -184,9 +185,7 @@ async function processMention(mention, following) {
         console.log("Not following user.");
         const reply =
             "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7";
-        postToot(reply, "public", mention.status.id)
-            .then(() => dismissNotification(mention.id))
-            .catch((error) => console.error(error));
+        postToot(reply, "public", mention.status.id).catch((error) => console.error(error));
     }
 }
 
@@ -209,7 +208,7 @@ async function handleImageCommand(mention, prompt) {
 
                 const mediaId = mediaResponse.data.id;
                 if (mention) {
-                    const tootText = `@${mention.account.username} Image prompt: ${prompt.substring(
+                    const tootText = `@${mention.account.acct} Image prompt: ${prompt.substring(
                         0,
                         484 - mention.account.username.length
                     )}`;
@@ -227,7 +226,7 @@ async function handleImageCommand(mention, prompt) {
                         .catch((error) => {
                             console.error("Error posting toot with image:", error);
                         });
-                    await dismissNotification(mention.id);
+
                     logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
                 } else {
                     const tootText = `Image prompt: ${prompt.substring(0, 486)}`;
@@ -265,11 +264,11 @@ async function handleHelpCommand(mention) {
     return new Promise(async (resolve, reject) => {
         try {
             await postToot(
-                `Hello, @${mention.account.username} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
+                `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
                 "public",
                 mention.status.id
             );
-            await dismissNotification(mention.id);
+
             resolve();
         } catch (error) {
             console.error(`Error handling help command: ${JSON.stringify(error)}`);
@@ -282,11 +281,11 @@ async function handleBetaApplicationCommand(mention) {
     return new Promise(async (resolve, reject) => {
         try {
             await postToot(
-                `Hello, @${mention.account.username} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
+                `Hello, @${mention.account.acct} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
                 "public",
                 mention.status.id
             );
-            await dismissNotification(mention.id);
+
             resolve();
         } catch (error) {
             console.error("Error handling beta application command:", error);
@@ -303,7 +302,7 @@ async function handleRegularMention(mention) {
 
             const systemMessage = {
                 role: "system",
-                content: `The user's handle is @${mention.account.username}.`,
+                content: `The user's handle is @${mention.account.acct}.`,
             };
             conversation.push(systemMessage);
 
@@ -316,7 +315,7 @@ async function handleRegularMention(mention) {
 
             const reply = response.data.choices[0].message.content;
             await postToot(reply, "public", mention.status.id);
-            await dismissNotification(mention.id);
+
             // Find the last user message in the conversation
             const lastUserMessage = conversation
                 .slice()
@@ -338,18 +337,14 @@ async function handleFeedbackCommand(mention, prompt) {
     return new Promise(async (resolve, reject) => {
         try {
             logFeedback(mention.account.id, mention.status.id, prompt);
-            await postToot(
-                `Thank you for your feedback, @${mention.account.username}! I have logged it and will use it to improve the bot.`,
+            postToot(
+                `Thank you for your feedback, @${mention.account.acct}! I have logged it and will use it to improve the bot.`,
                 "public",
                 mention.status.id
             );
-            await dismissNotification(mention.id);
+
             if (process.env.MASTODON_ADMIN_ALERT_USERNAME) {
-                await postToot(
-                    `${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`,
-                    "public",
-                    null
-                );
+                postToot(`${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`, "public", null);
             }
             resolve();
         } catch (error) {
@@ -365,17 +360,17 @@ async function handleTootNowCommand(mention, prompt) {
             const is_admin = await isAdmin(mention.account.id);
             if (!is_admin) {
                 await postToot(
-                    `Sorry, @${mention.account.username} you are not authorized to use this command.`,
+                    `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
                     "public",
                     mention.status.id
                 );
-                await dismissNotification(mention.id);
+
                 resolve();
                 return;
             } else {
                 const genToot = await generateToot(prompt);
                 await postToot(genToot, "public", null);
-                await dismissNotification(mention.id);
+
                 resolve();
             }
         } catch (error) {
@@ -391,17 +386,17 @@ async function handleImageNowCommand(mention, prompt) {
             const is_admin = await isAdmin(mention.account.id);
             if (!is_admin) {
                 await postToot(
-                    `Sorry, @${mention.account.username} you are not authorized to use this command.`,
+                    `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
                     "public",
                     mention.status.id
                 );
-                await dismissNotification(mention.id);
+
                 resolve();
                 return;
             } else {
                 const genImage = await generateImagePrompt(prompt);
                 await handleImageCommand(null, genImage);
-                await dismissNotification(mention.id);
+
                 resolve();
             }
         } catch (error) {
@@ -544,7 +539,7 @@ async function main() {
                 "5 21 * * *", // 9:05 PM Pacific local time
             ];
             imageCronJobs = imageTimes.map((time) => {
-                return cron.schedule(time, handleImageLoop);
+                return cron.schedule(time, handleImageLoop).tz("America/Los_Angeles");
             });
         }
 
@@ -557,7 +552,7 @@ async function main() {
                 "0 21 * * *", // 9:00 PM Pacific local time
             ];
             tootCronJobs = tootTimes.map((time) => {
-                return cron.schedule(time, handleTootLoop);
+                return cron.schedule(time, handleTootLoop).tz("America/Los_Angeles");
             });
         }
     }
