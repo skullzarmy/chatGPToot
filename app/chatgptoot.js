@@ -539,7 +539,9 @@ async function main() {
                 "5 21 * * *", // 9:05 PM Pacific local time
             ];
             imageCronJobs = imageTimes.map((time) => {
-                return cron.schedule(time, handleImageLoop).tz("America/Los_Angeles");
+                return cron.schedule(time, handleImageLoop, {
+                    timezone: "America/Los_Angeles",
+                });
             });
         }
 
@@ -552,7 +554,9 @@ async function main() {
                 "0 21 * * *", // 9:00 PM Pacific local time
             ];
             tootCronJobs = tootTimes.map((time) => {
-                return cron.schedule(time, handleTootLoop).tz("America/Los_Angeles");
+                return cron.schedule(time, handleTootLoop, {
+                    timezone: "America/Los_Angeles",
+                });
             });
         }
     }
