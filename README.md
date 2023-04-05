@@ -73,6 +73,7 @@ _command must be at the beginning of the mention (after the @mention)_
 
 -   "//toot-now// {prompt}" - Posts a new toot to main bot account using given prompt
 -   "//image-now// {prompt}" - Posts a new image to main bot account using given prompt
+-   "//status//" - Replies with a status message.
 
 ### Example
 
