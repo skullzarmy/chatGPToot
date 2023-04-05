@@ -114,32 +114,34 @@ async function getStatus() {
         try {
             const date = new Date();
             const countfeedback = await countFeedback();
-            const prompt = "This is a test.";
-            const response = await openai.complete({
-                engine: "text-davinci-003",
-                prompt,
-                max_tokens: 1,
-                temperature: 0,
-                top_p: 1,
-                n: 1,
-                stream: false,
-                logprobs: null,
-                stop: ["\n"],
-            });
-            let openAIStatus = "not working";
+            const prompt = "This is a test. Plese reply with a pleasant message.";
+            const response = await openai
+                .createCompletion({
+                    model: "text-davinci-003",
+                    prompt: prompt,
+                    max_tokens: 10,
+                    temperature: 0.1,
+                })
+                .then((response) => {
+                    let openAIStatus = "not working";
 
-            if (response.data.choices[0].text) {
-                openAIStatus = "working as expected";
-            }
+                    if (response.data.choices[0].text) {
+                        openAIStatus = "working as expected";
+                    }
 
-            const status = `The current date is ${moment(date)
-                .tz("UTC")
-                .format(
-                    "YYYY-MM-DD HH:mm:ss"
-                )} in UTC. There are ${countfeedback} logged feedback messages. The connection to OpenAI is ${openAIStatus}. Test response: ${
-                response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
-            }`;
-            resolve(status);
+                    const status = `The current date is ${moment(date)
+                        .tz("UTC")
+                        .format(
+                            "YYYY-MM-DD HH:mm:ss"
+                        )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
+                        response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
+                    }`;
+                    resolve(status);
+                })
+                .catch((error) => {
+                    console.error(`Error creating completion: ${error}`);
+                    reject(`Error creating completion: ${error}`);
+                });
         } catch (error) {
             reject(`Error getting status: ${error}`);
         }
@@ -217,8 +219,10 @@ async function processMention(mention, following) {
                 break;
             case "//status//":
                 handleStatusCommand(mention).catch((error) => console.error(error));
+                break;
             default:
                 handleRegularMention(mention).catch((error) => console.error(error));
+                break;
         }
     } else {
         console.log("Not following user.");

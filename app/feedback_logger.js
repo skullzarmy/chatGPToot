@@ -46,6 +46,9 @@ async function logFeedback(userId, statusId, content) {
 async function countFeedback() {
     try {
         const feedbackData = await readFeedbackLog();
+        if (!feedbackData.feedback) {
+            return 0;
+        }
         return feedbackData.feedback.length;
     } catch (error) {
         console.error("Error counting feedback:", error);
