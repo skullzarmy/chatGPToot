@@ -124,11 +124,9 @@ async function getStatus() {
                 })
                 .then((response) => {
                     let openAIStatus = "not working";
-
                     if (response.data.choices[0].text) {
                         openAIStatus = "working as expected";
                     }
-
                     const status = `The current date is ${moment(date)
                         .tz("UTC")
                         .format(
@@ -140,10 +138,21 @@ async function getStatus() {
                 })
                 .catch((error) => {
                     console.error(`Error creating completion: ${error}`);
-                    reject(`Error creating completion: ${error}`);
+                    const status = `The current date is ${moment(date)
+                        .tz("UTC")
+                        .format(
+                            "YYYY-MM-DD HH:mm:ss"
+                        )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
+                    resolve(status);
                 });
         } catch (error) {
-            reject(`Error getting status: ${error}`);
+            console.error(`Error getting status: ${error}`);
+            const status = `The current date is ${moment(date)
+                .tz("UTC")
+                .format(
+                    "YYYY-MM-DD HH:mm:ss"
+                )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
+            reject(status);
         }
     });
 }
