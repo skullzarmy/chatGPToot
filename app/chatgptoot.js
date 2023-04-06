@@ -89,7 +89,7 @@ async function postToot(status, visibility, in_reply_to_id) {
         // Split statusCopy into tootTexts
         while (statusCopy.length > 0) {
             let lastSpace = statusCopy.substring(0, maxChars).lastIndexOf(" ");
-            if (lastSpace === -1) {
+            if (lastSpace === -1 || statusCopy.length <= maxChars) {
                 lastSpace = maxChars;
             }
             tootTexts.push(statusCopy.substring(0, lastSpace));
@@ -107,18 +107,24 @@ async function postToot(status, visibility, in_reply_to_id) {
                     visibility,
                     ...(in_reply_to_id ? { in_reply_to_id } : {}),
                 };
-                const result = await mastodon.post("statuses", params);
-                if (tootCount === 1) {
-                    in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
-                }
+
+                // Wrap the result in a promise and await
+                await new Promise(async (resolve, reject) => {
+                    try {
+                        const result = await mastodon.post("statuses", params);
+                        if (tootCount === 1) {
+                            in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
+                        }
+                        resolve(result);
+                    } catch (error) {
+                        reject(`Error posting toot: ${error}`);
+                    }
+                });
             } catch (error) {
                 throw new Error(`Error posting toot: ${error}`);
             }
 
             tootCount++;
-
-            // Add a delay to ensure the toots are posted in order
-            await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     } else {
         try {
