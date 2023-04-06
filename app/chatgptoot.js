@@ -111,6 +111,9 @@ async function postToot(status, visibility, in_reply_to_id) {
 
             statusCopy = statusCopy.substring(lastSpace + 1);
             tootCount++;
+
+            // Add a delay to ensure the toots are posted in order
+            await new Promise((resolve) => setTimeout(resolve, 1000));
         }
     } else {
         try {
