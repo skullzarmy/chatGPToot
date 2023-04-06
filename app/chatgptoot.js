@@ -1,5 +1,5 @@
-const dotenv = require("dotenv");
-dotenv.config();
+const dotenvSafe = require("dotenv-safe");
+dotenvSafe.config();
 const { Configuration, OpenAIApi } = require("openai");
 const M = require("mastodon");
 const fs = require("fs");
@@ -11,6 +11,14 @@ const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
 const { logFeedback, countFeedback } = require("./feedback_logger");
 // const redis = require("redis");
+
+const example_image_prompts = [
+    "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art",
+    "Winnie the Pooh driving a tesla in a bathroom, Digital art",
+    "An alien eating a plate of nachos in Easter Island, Realistic photograph",
+    "A bag of marbles melting into a puddle in space, Advertisement",
+    "A wedding ring covered in cheese in a farm, Victorian Newspaper article, Hyperrealistic",
+];
 
 const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
 let missingVars = [];
@@ -70,20 +78,52 @@ async function addContext(msgs) {
     msgs.push(systemMessage);
 }
 
-function postToot(status, visibility, in_reply_to_id) {
-    return new Promise(async (resolve, reject) => {
+async function postToot(status, visibility, in_reply_to_id) {
+    const maxChars = 490;
+
+    if (status.length > 500) {
+        let statusCopy = status;
+        let tootCount = 1;
+
+        const totalToots = Math.ceil(statusCopy.length / maxChars);
+
+        while (statusCopy.length > 0) {
+            let lastSpace = statusCopy.substring(0, maxChars).lastIndexOf(" ");
+            if (lastSpace === -1) {
+                lastSpace = maxChars;
+            }
+
+            const tootText = `${statusCopy.substring(0, lastSpace)} [${tootCount}/${totalToots}]`;
+
+            try {
+                const params = {
+                    status: tootText,
+                    visibility,
+                    ...(in_reply_to_id ? { in_reply_to_id } : {}),
+                };
+                const result = await mastodon.post("statuses", params);
+                if (tootCount === 1) {
+                    in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
+                }
+            } catch (error) {
+                throw new Error(`Error posting toot: ${error}`);
+            }
+
+            statusCopy = statusCopy.substring(lastSpace + 1);
+            tootCount++;
+        }
+    } else {
         try {
             const params = {
                 status,
                 visibility,
                 ...(in_reply_to_id ? { in_reply_to_id } : {}),
             };
-            const result = await mastodon.post("statuses", params);
-            resolve(result);
+            await mastodon.post("statuses", params);
         } catch (error) {
-            reject(`Error posting toot: ${error}`);
+            throw new Error(`Error posting toot: ${error}`);
         }
-    });
+    }
 }
 
 function dismissNotification(id) {
@@ -110,51 +150,41 @@ function isAdmin(userId) {
 }
 
 async function getStatus() {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const date = new Date();
-            const countfeedback = await countFeedback();
-            const prompt = "This is a test. Plese reply with a pleasant message.";
-            const response = await openai
-                .createCompletion({
-                    model: "text-davinci-003",
-                    prompt: prompt,
-                    max_tokens: 10,
-                    temperature: 0.1,
-                })
-                .then((response) => {
-                    let openAIStatus = "not working";
-                    if (response.data.choices[0].text) {
-                        openAIStatus = "working as expected";
-                    }
-                    const status = `The current date is ${moment(date)
-                        .tz("UTC")
-                        .format(
-                            "YYYY-MM-DD HH:mm:ss"
-                        )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
-                        response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
-                    }`;
-                    resolve(status);
-                })
-                .catch((error) => {
-                    console.error(`Error creating completion: ${error}`);
-                    const status = `The current date is ${moment(date)
-                        .tz("UTC")
-                        .format(
-                            "YYYY-MM-DD HH:mm:ss"
-                        )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
-                    resolve(status);
-                });
-        } catch (error) {
-            console.error(`Error getting status: ${error}`);
-            const status = `The current date is ${moment(date)
-                .tz("UTC")
-                .format(
-                    "YYYY-MM-DD HH:mm:ss"
-                )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
-            reject(status);
+    try {
+        const date = new Date();
+        const countfeedback = await countFeedback();
+
+        const prompt = "This is a test. Plese reply with a pleasant message.";
+        const response = await openai.createCompletion({
+            model: "text-davinci-003",
+            prompt: prompt,
+            max_tokens: 10,
+            temperature: 0.1,
+        });
+
+        let openAIStatus = "not working";
+        if (response.data.choices[0].text) {
+            openAIStatus = "working as expected";
         }
-    });
+
+        const status = `The current date is ${moment(date)
+            .tz("UTC")
+            .format(
+                "YYYY-MM-DD HH:mm:ss"
+            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
+            response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
+        }`;
+
+        return status;
+    } catch (error) {
+        console.error(`Error getting status: ${error}`);
+        const status = `The current date is ${moment(date)
+            .tz("UTC")
+            .format(
+                "YYYY-MM-DD HH:mm:ss"
+            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
+        throw new Error(status);
+    }
 }
 
 async function getTrendingTags() {
@@ -242,335 +272,309 @@ async function processMention(mention, following) {
 }
 
 async function handleImageCommand(mention, prompt) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
-            const imageUrl = response.data.data[0].url;
-            const tokens = "unknown";
+    try {
+        const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
+        const imageUrl = response.data.data[0].url;
+        const tokens = "unknown";
 
-            const filename = `new_toot_${Date.now()}.png`;
-            const filepath = path.join(__dirname, "..", "media", filename);
+        const filename = `new_toot_${Date.now()}.png`;
+        const filepath = path.join(__dirname, "..", "media", filename);
 
-            downloadImage(imageUrl, filepath, async () => {
-                console.log("Image downloaded to " + filepath);
+        await downloadImage(imageUrl, filepath);
+        console.log("Image downloaded to " + filepath);
 
-                const mediaResponse = await mastodon.post("media", {
-                    file: fs.createReadStream(filepath),
-                });
+        const mediaResponse = await mastodon.post("media", {
+            file: fs.createReadStream(filepath),
+        });
 
-                const mediaId = mediaResponse.data.id;
-                if (mention) {
-                    const tootText = `@${mention.account.acct} Image prompt: ${prompt.substring(
-                        0,
-                        484 - mention.account.username.length
-                    )}`;
-                    await mastodon
-                        .post("statuses", {
-                            status: tootText,
-                            in_reply_to_id: mention.status.id,
-                            media_ids: [mediaId],
-                            visibility: "public",
-                        })
-                        .then((tootResponse) => {
-                            console.log("Toot with image posted:", tootResponse.data.uri);
-                            resolve();
-                        })
-                        .catch((error) => {
-                            console.error("Error posting toot with image:", error);
-                        });
+        const mediaId = mediaResponse.data.id;
+        let tootText;
+        let tootParams = {
+            media_ids: [mediaId],
+            visibility: "public",
+        };
 
-                    logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
-                } else {
-                    const tootText = `Image prompt: ${prompt.substring(0, 486)}`;
-                    await mastodon
-                        .post("statuses", {
-                            status: tootText,
-                            media_ids: [mediaId],
-                            visibility: "public",
-                        })
-                        .then((tootResponse) => {
-                            console.log("Toot with image posted:", tootResponse.data.uri);
-                            resolve();
-                        })
-                        .catch((error) => {
-                            console.error("Error posting toot with image:", error);
-                        });
-                    logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
-                }
-                fs.unlink(filepath, (err) => {
-                    if (err) {
-                        console.error("Error deleting file:", err);
-                    } else {
-                        console.log("File deleted:", filepath);
-                    }
-                });
-            });
-        } catch (error) {
-            console.error(`OpenAI Error: ${JSON.stringify(error)}`);
-            reject(error);
+        if (mention) {
+            tootText = `@${mention.account.acct} Image prompt: ${prompt.substring(
+                0,
+                484 - mention.account.username.length
+            )}`;
+            tootParams.status = tootText;
+            tootParams.in_reply_to_id = mention.status.id;
+
+            logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
+        } else {
+            tootText = `Image prompt: ${prompt.substring(0, 486)}`;
+            tootParams.status = tootText;
+
+            logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
         }
+
+        const tootResponse = await mastodon.post("statuses", tootParams);
+        console.log("Toot with image posted:", tootResponse.data.uri);
+
+        fs.unlink(filepath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            } else {
+                console.log("File deleted:", filepath);
+            }
+        });
+    } catch (error) {
+        console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
+
+function downloadImage(url, filepath) {
+    return new Promise((resolve, reject) => {
+        https.get(url, (response) => {
+            response
+                .pipe(fs.createWriteStream(filepath))
+                .on("finish", () => resolve())
+                .on("error", (err) => reject(err));
+        });
     });
 }
 
 async function handleHelpCommand(mention) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            await postToot(
-                `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
-                "public",
-                mention.status.id
-            );
-
-            resolve();
-        } catch (error) {
-            console.error(`Error handling help command: ${JSON.stringify(error)}`);
-            reject(error);
-        }
-    });
+    try {
+        await postToot(
+            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
+            "public",
+            mention.status.id
+        );
+    } catch (error) {
+        console.error(`Error handling help command: ${JSON.stringify(error)}`);
+        throw error;
+    }
 }
 
 async function handleBetaApplicationCommand(mention) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            await postToot(
-                `Hello, @${mention.account.acct} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
-                "public",
-                mention.status.id
-            );
-
-            resolve();
-        } catch (error) {
-            console.error("Error handling beta application command:", error);
-            reject(error);
-        }
-    });
+    try {
+        await postToot(
+            `Hello, @${mention.account.acct} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
+            "public",
+            mention.status.id
+        );
+    } catch (error) {
+        console.error("Error handling beta application command:", error);
+        throw error;
+    }
 }
 
 async function handleStatusCommand(mention) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const is_admin = await isAdmin(mention.account.id);
-            if (!is_admin) {
-                await postToot(
-                    `Hello, @${mention.account.acct} You are not authorized to use this command.`,
-                    "public",
-                    mention.status.id
-                );
-                resolve();
-            } else {
-                const status = await getStatus();
-                await postToot(status, "public", mention.status.id);
-                resolve();
-            }
-        } catch (error) {
-            console.error("Error handling status command:", error);
-            reject(error);
-        }
-    });
-}
-
-async function handleRegularMention(mention) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            let conversation = messages.slice();
-            await fetchConversation(mention.status.id, conversation);
-
-            const systemMessage = {
-                role: "system",
-                content: `The user's handle is @${mention.account.acct}.`,
-            };
-            conversation.push(systemMessage);
-
-            await addContext(conversation);
-
-            const response = await openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: conversation,
-            });
-
-            const reply = response.data.choices[0].message.content;
-            await postToot(reply, "public", mention.status.id);
-
-            // Find the last user message in the conversation
-            const lastUserMessage = conversation
-                .slice()
-                .reverse()
-                .find((message) => message.role === "user");
-            if (lastUserMessage) {
-                const tokens = response.data.choices[0].tokens;
-                logUsage(mention.account.id, mention.status.id, lastUserMessage.content, tokens, "chat");
-            }
-            resolve();
-        } catch (error) {
-            console.error(`OpenAI Error: ${error}`);
-            reject(error);
-        }
-    });
-}
-
-async function handleFeedbackCommand(mention, prompt) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            logFeedback(mention.account.id, mention.status.id, prompt);
-            postToot(
-                `Thank you for your feedback, @${mention.account.acct}! I have logged it and will use it to improve the bot.`,
+    try {
+        const is_admin = await isAdmin(mention.account.id);
+        if (!is_admin) {
+            await postToot(
+                `Hello, @${mention.account.acct} You are not authorized to use this command.`,
                 "public",
                 mention.status.id
             );
-
-            if (process.env.MASTODON_ADMIN_ALERT_USERNAME) {
-                postToot(`${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`, "public", null);
-            }
-            resolve();
-        } catch (error) {
-            console.error(`Feedback Error: ${error}`);
-            reject(error);
+        } else {
+            const status = await getStatus();
+            await postToot(status, "public", mention.status.id);
         }
-    });
+    } catch (error) {
+        console.error("Error handling status command:", error);
+        throw error;
+    }
+}
+
+async function handleRegularMention(mention) {
+    try {
+        let conversation = messages.slice();
+        await fetchConversation(mention.status.id, conversation);
+
+        const systemMessage = {
+            role: "system",
+            content: `The user's handle is @${mention.account.acct}.`,
+        };
+        conversation.push(systemMessage);
+
+        await addContext(conversation);
+
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: conversation,
+        });
+
+        const reply = response.data.choices[0].message.content;
+        await postToot(reply, "public", mention.status.id);
+
+        // Find the last user message in the conversation
+        const lastUserMessage = conversation
+            .slice()
+            .reverse()
+            .find((message) => message.role === "user");
+        if (lastUserMessage) {
+            const tokens = response.data.choices[0].tokens;
+            logUsage(mention.account.id, mention.status.id, lastUserMessage.content, tokens, "chat");
+        }
+    } catch (error) {
+        console.error(`OpenAI Error: ${error}`);
+        throw error;
+    }
+}
+
+async function handleFeedbackCommand(mention, prompt) {
+    try {
+        logFeedback(mention.account.id, mention.status.id, prompt);
+        await postToot(
+            `Thank you for your feedback, @${mention.account.acct}! I have logged it and will use it to improve the bot.`,
+            "public",
+            mention.status.id
+        );
+
+        if (process.env.MASTODON_ADMIN_ALERT_USERNAME) {
+            await postToot(
+                `${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`,
+                "public",
+                null
+            );
+        }
+    } catch (error) {
+        console.error(`Feedback Error: ${error}`);
+        throw error;
+    }
 }
 
 async function handleTootNowCommand(mention, prompt) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const is_admin = await isAdmin(mention.account.id);
-            if (!is_admin) {
-                await postToot(
-                    `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
-                    "public",
-                    mention.status.id
-                );
-
-                resolve();
-                return;
-            } else {
-                const genToot = await generateToot(prompt);
-                await postToot(genToot, "public", null);
-
-                resolve();
-            }
-        } catch (error) {
-            console.error(`Toot Now Error: ${error}`);
-            reject(error);
+    try {
+        const is_admin = await isAdmin(mention.account.id);
+        if (!is_admin) {
+            await postToot(
+                `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
+                "public",
+                mention.status.id
+            );
+        } else {
+            const genToot = await generateToot(prompt);
+            await postToot(genToot, "public", null);
         }
-    });
+    } catch (error) {
+        console.error(`Toot Now Error: ${error}`);
+        throw error;
+    }
 }
 
 async function handleImageNowCommand(mention, prompt) {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const is_admin = await isAdmin(mention.account.id);
-            if (!is_admin) {
-                await postToot(
-                    `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
-                    "public",
-                    mention.status.id
-                );
-
-                resolve();
-                return;
-            } else {
-                const genImage = await generateImagePrompt(prompt);
-                await handleImageCommand(null, genImage);
-
-                resolve();
-            }
-        } catch (error) {
-            console.error(`Image Now Error: ${error}`);
-            reject(error);
+    try {
+        const is_admin = await isAdmin(mention.account.id);
+        if (!is_admin) {
+            await postToot(
+                `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
+                "public",
+                mention.status.id
+            );
+        } else {
+            const genImage = await generateImagePrompt(prompt);
+            await handleImageCommand(null, genImage);
         }
-    });
+    } catch (error) {
+        console.error(`Image Now Error: ${error}`);
+        throw error;
+    }
 }
 
 async function generateImagePrompt() {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const msg = [
-                {
-                    role: "system",
-                    content:
-                        "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via openAI and post to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
-                },
-                {
-                    role: "system",
-                    content: "Please create an image generation prompt. What image would you like to create?",
-                },
-            ];
+    try {
+        const msg = [
+            {
+                role: "system",
+                content:
+                    "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via DALL-E and post to a Mastodon account. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
+            },
+            {
+                role: "user",
+                content:
+                    "Please create an image generation prompt using clear style descriptions to ensure high quality generation. What image would you like to create?",
+            },
+        ];
 
-            const response = await openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: msg,
+        if (example_image_prompts.length > 0) {
+            msg.push({
+                role: "system",
+                content: "example responses:",
             });
-
-            const prompt = response.data.choices[0].message.content;
-            resolve(prompt);
-        } catch (error) {
-            console.error(`OpenAI Error: ${error}`);
-            reject(error);
+            for (const example in example_image_prompts) {
+                msg.push({
+                    role: "system",
+                    content: example_image_prompts[example],
+                });
+            }
         }
-    });
+
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: msg,
+        });
+
+        const prompt = response.data.choices[0].message.content;
+        return prompt;
+    } catch (error) {
+        console.error(`OpenAI Error: ${error}`);
+        throw error;
+    }
 }
 
 async function generateToot() {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const msg = [
-                {
-                    role: "system",
-                    content:
-                        "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write a toot, which will be posted to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a toot which will be posted automatically. There is no human intervention. Limit your response to 500 characters.",
-                },
-                {
-                    role: "system",
-                    content: "Please create a toot. What would you like to say?",
-                },
-            ];
+    try {
+        const msg = [
+            {
+                role: "system",
+                content:
+                    "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write a toot, which will be posted to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a toot which will be posted automatically. There is no human intervention. Limit your response to 500 characters.",
+            },
+            {
+                role: "system",
+                content: "Please create a toot. What would you like to say?",
+            },
+        ];
 
-            await addContext(msg);
+        await addContext(msg);
 
-            const response = await openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
-                messages: msg,
-            });
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: msg,
+        });
 
-            const tokens = response.data.choices[0].message.tokens;
-            logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate toot", tokens, "chat");
+        const tokens = response.data.choices[0].message.tokens;
+        logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate toot", tokens, "chat");
 
-            const toot = response.data.choices[0].message.content;
-            if (toot.trim() === "") {
-                console.log("Generated toot is empty");
-                reject("Generated toot is empty");
-            } else {
-                resolve(toot);
-            }
-        } catch (error) {
-            console.error(`OpenAI Error: ${error}`);
-            reject(error);
+        const toot = response.data.choices[0].message.content;
+        if (toot.trim() === "") {
+            console.log("Generated toot is empty");
+            reject("Generated toot is empty");
+        } else {
+            return toot;
         }
-    });
+    } catch (error) {
+        console.error(`OpenAI Error: ${error}`);
+        throw error;
+    }
 }
 
 async function checkMentions() {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const notifications = await mastodon.get("notifications", { types: ["mention"] });
-            console.log(`${notifications.data.length} mentions found at ${new Date()}`);
-            if (notifications.data.length > 0) {
-                const followingResponse = await getFollowing();
-                const following = followingResponse.data;
+    try {
+        const notifications = await mastodon.get("notifications", { types: ["mention"] });
+        console.log(`${notifications.data.length} mentions found at ${new Date()}`);
+        if (notifications.data.length > 0) {
+            const followingResponse = await getFollowing();
+            const following = followingResponse.data;
 
-                for (const mention of notifications.data) {
-                    const userId = mention.account.id;
-                    const rateLimiter = rateLimiterGroup.key(userId);
+            for (const mention of notifications.data) {
+                const userId = mention.account.id;
+                const rateLimiter = rateLimiterGroup.key(userId);
 
-                    rateLimiter.schedule(() => processMention(mention, following));
-                }
+                rateLimiter.schedule(() => processMention(mention, following));
             }
-            resolve();
-        } catch (error) {
-            console.error("Error checking mentions:", error);
-            reject(error);
         }
-    });
+    } catch (error) {
+        console.error("Error checking mentions:", error);
+        throw error;
+    }
 }
 
 async function handleImageLoop() {
@@ -589,6 +593,7 @@ async function handleTootLoop() {
 
 async function main() {
     const botStartTime = moment().tz("UTC");
+    console.log(`Bot started at ${botStartTime.format()}`);
     const args = process.argv.slice(2);
     const noLoop = args.includes("--no-loop");
     const noImage = args.includes("--no-image");

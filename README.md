@@ -8,8 +8,9 @@
 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
 -   `npm install` to initiate node and install dependencies
--   `npm run setup` will create needed folders and `.env` file
--   edit `.env` file and add your credentials
+-   `npm run setup` will create needed folders
+-   `cp .env.example .env` will copy `.env.example` to `.env` file
+-   `nano .env` or use text editor to edit `.env` file and add your credentials
 
 ---
 

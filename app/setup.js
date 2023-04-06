@@ -1,6 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-const { exec } = require("child_process");
+// const { exec } = require("child_process");
 
 // Create folders if they don't exist
 const foldersToCreate = ["media", "logs", "reports", "feedback"];
@@ -13,30 +13,22 @@ foldersToCreate.forEach((folder) => {
     }
 });
 
-// Copy .env-sample to .env if .env doesn't exist
-const envSamplePath = path.join(appRootPath, ".env-sample");
-const envPath = path.join(appRootPath, ".env");
-if (!fs.existsSync(envPath)) {
-    fs.copyFileSync(envSamplePath, envPath);
-    console.log(`Created .env file from .env-sample`);
-}
-
 // Install and start Redis based on the OS
-const isWindows = process.platform === "win32";
-const isMac = process.platform === "darwin";
-const isLinux = process.platform === "linux";
+// const isWindows = process.platform === "win32";
+// const isMac = process.platform === "darwin";
+// const isLinux = process.platform === "linux";
 
-function runCommand(command) {
-    return new Promise((resolve, reject) => {
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(stdout ? stdout : stderr);
-            }
-        });
-    });
-}
+// function runCommand(command) {
+//     return new Promise((resolve, reject) => {
+//         exec(command, (error, stdout, stderr) => {
+//             if (error) {
+//                 reject(error);
+//             } else {
+//                 resolve(stdout ? stdout : stderr);
+//             }
+//         });
+//     });
+// }
 
 async function installAndStartRedis() {
     if (isMac) {
