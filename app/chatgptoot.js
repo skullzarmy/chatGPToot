@@ -60,10 +60,14 @@ const rateLimiterGroup = new Group({
     reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
 });
 
-function downloadImage(url, dest, cb) {
-    request.head(url, function (err, res, body) {
-        request(url).pipe(fs.createWriteStream(dest)).on("close", cb);
-    });
+async function downloadImage(url, dest) {
+    try {
+        request.head(url, function (err, res, body) {
+            request(url).pipe(fs.createWriteStream(dest)).on("close", resolve).on("error", reject);
+        });
+    } catch (error) {
+        reject(error);
+    }
 }
 
 async function addContext(msgs) {
@@ -338,17 +342,6 @@ async function handleImageCommand(mention, prompt) {
         console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
         throw error;
     }
-}
-
-function downloadImage(url, filepath) {
-    return new Promise((resolve, reject) => {
-        https.get(url, (response) => {
-            response
-                .pipe(fs.createWriteStream(filepath))
-                .on("finish", () => resolve())
-                .on("error", (err) => reject(err));
-        });
-    });
 }
 
 async function handleHelpCommand(mention) {
