@@ -84,20 +84,26 @@ async function postToot(status, visibility, in_reply_to_id) {
     if (status.length > 500) {
         let statusCopy = status;
         let tootCount = 1;
+        let tootTexts = [];
 
-        const totalToots = Math.ceil(statusCopy.length / maxChars);
-
+        // Split statusCopy into tootTexts
         while (statusCopy.length > 0) {
             let lastSpace = statusCopy.substring(0, maxChars).lastIndexOf(" ");
             if (lastSpace === -1) {
                 lastSpace = maxChars;
             }
+            tootTexts.push(statusCopy.substring(0, lastSpace));
+            statusCopy = statusCopy.substring(lastSpace + 1);
+        }
 
-            const tootText = `${statusCopy.substring(0, lastSpace)} [${tootCount}/${totalToots}]`;
+        // Calculate totalToots
+        const totalToots = tootTexts.length;
 
+        // Post toots in order
+        for (const tootText of tootTexts) {
             try {
                 const params = {
-                    status: tootText,
+                    status: `${tootText} [${tootCount}/${totalToots}]`,
                     visibility,
                     ...(in_reply_to_id ? { in_reply_to_id } : {}),
                 };
@@ -109,7 +115,6 @@ async function postToot(status, visibility, in_reply_to_id) {
                 throw new Error(`Error posting toot: ${error}`);
             }
 
-            statusCopy = statusCopy.substring(lastSpace + 1);
             tootCount++;
 
             // Add a delay to ensure the toots are posted in order
