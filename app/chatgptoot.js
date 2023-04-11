@@ -161,6 +161,7 @@ function getFollowing() {
 }
 
 function isAdmin(username) {
+    console.log(`Checking if ${username} is an admin`);
     if (!process.env.MASTODON_ADMIN_ACCOUNT) {
         return false;
     } else {
@@ -518,7 +519,8 @@ async function handleFeedbackCommand(mention, prompt) {
 
 async function handleTootNowCommand(mention, prompt) {
     try {
-        const is_admin = await isAdmin(mention.account.id);
+        const is_admin = await isAdmin(mention.account.acct);
+        console.log("is_admin:", is_admin);
         if (!is_admin) {
             await postToot(
                 `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
@@ -537,7 +539,7 @@ async function handleTootNowCommand(mention, prompt) {
 
 async function handleImageNowCommand(mention, prompt) {
     try {
-        const is_admin = await isAdmin(mention.account.id);
+        const is_admin = await isAdmin(mention.account.acct);
         if (!is_admin) {
             await postToot(
                 `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
