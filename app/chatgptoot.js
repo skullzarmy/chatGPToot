@@ -552,13 +552,13 @@ async function handleImageNowCommand(mention, prompt) {
     }
 }
 
-async function generateImagePrompt(prompt = false) {
-    if (prompt) {
-        prompt =
+async function generateImagePrompt(uPrompt = false) {
+    if (uPrompt) {
+        uPrompt =
             "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. This is my idea: " +
-            prompt;
+            uPrompt;
     } else {
-        prompt =
+        uPrompt =
             "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. What image would you like to create?";
     }
     try {
@@ -585,7 +585,7 @@ async function generateImagePrompt(prompt = false) {
 
         msg.push({
             role: "user",
-            content: prompt,
+            content: uPrompt,
         });
 
         const response = await openai.createChatCompletion({
