@@ -160,11 +160,11 @@ function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
 }
 
-function isAdmin(userId) {
-    if (!process.env.MASTODON_ADMIN_ACCOUNT_IDS) {
+function isAdmin(username) {
+    if (!process.env.MASTODON_ADMIN_ACCOUNT) {
         return false;
     } else {
-        return process.env.MASTODON_ADMIN_ACCOUNT_IDS.split(",").includes(userId);
+        return process.env.MASTODON_ADMIN_ACCOUNT == username;
     }
 }
 
@@ -441,7 +441,7 @@ async function handleBetaApplicationCommand(mention) {
 
 async function handleStatusCommand(mention) {
     try {
-        const is_admin = await isAdmin(mention.account.id);
+        const is_admin = await isAdmin(mention.account.acct);
         if (!is_admin) {
             await postToot(
                 `Hello, @${mention.account.acct} You are not authorized to use this command.`,
