@@ -5,12 +5,14 @@ const { format } = require("date-fns");
 
 const usageLogFile = path.join(__dirname, "..", "logs", "usage_log.json");
 
-function readUsageLog() {
-    if (!fs.existsSync(usageLogFile)) {
+async function readUsageLog() {
+    try {
+        const fileContent = await fs.readFile(usageLogFile, "utf-8");
+        return JSON.parse(fileContent);
+    } catch (error) {
         console.log("No usage logs yet.");
         return { users: [] };
     }
-    return JSON.parse(fs.readFileSync(usageLogFile, "utf-8"));
 }
 
 function getUserStats(user) {
@@ -32,8 +34,8 @@ function getUserStats(user) {
     };
 }
 
-function generateStatsTable(startDate, endDate) {
-    const usageData = readUsageLog();
+async function generateStatsTable(startDate, endDate) {
+    const usageData = await readUsageLog();
     let stats = [];
     usageData.users.forEach((user) => {
         let userStats = getUserStats(user);
@@ -50,14 +52,14 @@ function generateStatsTable(startDate, endDate) {
     return stats;
 }
 
-function generateCsv(stats, filename) {
+async function generateCsv(stats, filename) {
     let csv = "User ID,Total Logs,Chat Logs,Image Logs,Total Chat Tokens,Total Image Tokens,Earliest Log,Latest Log\n";
     stats.forEach((stat) => {
         csv += `${stat.id},${stat.count},${stat.chatCount},${stat.imageCount},${stat.chatTokens},${
             stat.imageTokens
         },${format(stat.earliest, "yyyy-MM-dd HH:mm:ss")},${format(stat.latest, "yyyy-MM-dd HH:mm:ss")}\n`;
     });
-    fs.writeFileSync(filename, csv);
+    await fs.writeFile(filename, csv);
 }
 
 const args = process.argv.slice(2);
@@ -70,16 +72,18 @@ if (args.length >= 2) {
     endDate = args[1];
 }
 
-const stats = generateStatsTable(startDate, endDate);
-if (stats.length > 0) {
-    console.table(stats);
-    generateCsv(
-        stats,
-        path.join(
-            __dirname,
-            "..",
-            "reports",
-            "report" + (startDate ? "_" + startDate : "_" + Date.now()) + (endDate ? "_" + endDate : "") + ".csv"
-        )
-    );
-}
+(async () => {
+    const stats = await generateStatsTable(startDate, endDate);
+    if (stats.length > 0) {
+        console.table(stats);
+        await generateCsv(
+            stats,
+            path.join(
+                __dirname,
+                "..",
+                "reports",
+                "report" + (startDate ? "_" + startDate : "_" + Date.now()) + (endDate ? "_" + endDate : "") + ".csv"
+            )
+        );
+    }
+})();

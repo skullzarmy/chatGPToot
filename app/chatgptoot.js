@@ -13,30 +13,29 @@ const { logFeedback, countFeedback } = require("./feedback_logger");
 // const redis = require("redis");
 
 const example_image_prompts = [
-    "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art",
-    "Winnie the Pooh driving a tesla in a bathroom, Digital art",
-    "An alien eating a plate of nachos in Easter Island, Realistic photograph",
-    "A bag of marbles melting into a puddle in space, Advertisement",
-    "A wedding ring covered in cheese in a farm, Victorian Newspaper article, Hyperrealistic",
+    "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art, 8-bit",
+    "Winnie the Pooh driving a tesla in a bathroom, Digital art, E H Shepard",
+    "An alien eating a plate of cheesy nachos on Easter Island, Realistic photograph, 8K, HDR, Dan LuVisi",
+    "A bag of marbles melting into a puddle in space, 50's print advertisement, vintage style, Americana",
+    "A wedding ring covered in cheese in a farm, Victorian Newspaper article, faded paper",
+    "A macro photo of a fly on a leaf, Surrealism, hyperrealistic, 8K, HDR, Unreal Engine, Unity",
 ];
-
-const requiredEnvVars = ["OPENAI_KEY", "MASTODON_ACCESS_TOKEN", "MASTODON_API_URL", "MASTODON_ACCOUNT_ID"];
-let missingVars = [];
-requiredEnvVars.forEach((envVarName) => {
-    if (!process.env[envVarName]) {
-        missingVars.push(envVarName);
+let mastodon;
+function initMastodon(isDevMode) {
+    if (!isDevMode) {
+        mastodon = new M({
+            access_token: process.env.MASTODON_ACCESS_TOKEN,
+            api_url: process.env.MASTODON_API_URL,
+        });
+    } else {
+        mastodon = {
+            post: async (endpoint, params) => {
+                console.log(`Pretending to post to endpoint '${endpoint}' with params:`, params);
+                return Promise.resolve({ data: { id: 0 } });
+            },
+        };
     }
-});
-if (missingVars.length > 0) {
-    console.error("Missing the following required environment variables. Please check your .env file.");
-    console.error(missingVars);
-    process.exit(1);
 }
-
-const mastodon = new M({
-    access_token: process.env.MASTODON_ACCESS_TOKEN,
-    api_url: process.env.MASTODON_API_URL,
-});
 
 const configuration = new Configuration({ apiKey: process.env.OPENAI_KEY });
 const openai = new OpenAIApi(configuration);
@@ -498,7 +497,7 @@ async function generateImagePrompt() {
             {
                 role: "user",
                 content:
-                    "Please create an image generation prompt using clear style descriptions to ensure high quality generation. What image would you like to create?",
+                    "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. What image would you like to create?",
             },
         ];
 
@@ -610,6 +609,9 @@ async function main() {
     const noMention = args.includes("--no-mention");
     const tootNow = args.includes("--toot-now");
     const imageNow = args.includes("--image-now");
+    const isDevMode = args.includes("--dev-mode");
+
+    initMastodon(isDevMode);
 
     if (!noLoop) {
         if (!noMention) {
