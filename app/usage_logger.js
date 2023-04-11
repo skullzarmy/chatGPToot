@@ -2,10 +2,14 @@ const fs = require("fs/promises");
 const path = require("path");
 
 const logsDirectory = path.join(__dirname, "..", "logs");
-const today = new Date().toISOString().slice(0, 10);
-const usageLogFile = path.join(logsDirectory, `usage_log_${today}.json`);
+
+function getCurrentUsageLogFile() {
+    const today = new Date().toISOString().slice(0, 10);
+    return path.join(logsDirectory, `usage_log_${today}.json`);
+}
 
 async function readUsageLog() {
+    const usageLogFile = getCurrentUsageLogFile();
     try {
         await fs.access(usageLogFile);
     } catch (error) {
@@ -18,6 +22,7 @@ async function readUsageLog() {
 }
 
 async function writeUsageLog(data) {
+    const usageLogFile = getCurrentUsageLogFile();
     try {
         await fs.writeFile(usageLogFile, JSON.stringify(data, null, 2));
     } catch (error) {
