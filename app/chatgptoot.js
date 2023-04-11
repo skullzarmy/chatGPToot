@@ -252,6 +252,8 @@ async function processMention(mention, following) {
         const command = content.slice(commandIndex, commandEndIndex).trim();
         const prompt = content.replace(command, "").trim();
 
+        console.log("User: ", mention.account.acct);
+        console.log("User ID: ", mention.account.id);
         console.log("Content: ", content);
         console.log("Command: ", command);
         console.log("Prompt: ", prompt);
