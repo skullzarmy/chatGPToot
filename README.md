@@ -6,7 +6,7 @@
 
 ## [Follow ChatGPToot](https://masto.ai/@chatGPToot)
 
-[🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-⚖️) |
+[🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-%EF%B8%8F) |
 
 ## Installation
 
