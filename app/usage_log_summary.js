@@ -3,12 +3,20 @@ const path = require("path");
 const { parseISO } = require("date-fns");
 const { format } = require("date-fns");
 
-const usageLogFile = path.join(__dirname, "..", "logs", "usage_log.json");
+const logsFolder = path.join(__dirname, "..", "logs");
 
 async function readUsageLog() {
     try {
-        const fileContent = await fs.readFile(usageLogFile, "utf-8");
-        return JSON.parse(fileContent);
+        const files = await fs.readdir(logsFolder);
+        const usageLogFiles = files.filter((file) => file.startsWith("usage_log") && file.endsWith(".json"));
+
+        let allLogs = { users: [] };
+        for (const logFile of usageLogFiles) {
+            const fileContent = await fs.readFile(path.join(logsFolder, logFile), "utf-8");
+            const parsedContent = JSON.parse(fileContent);
+            allLogs.users = allLogs.users.concat(parsedContent.users);
+        }
+        return allLogs;
     } catch (error) {
         console.log("No usage logs yet.");
         return { users: [] };
