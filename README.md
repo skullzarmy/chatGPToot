@@ -1,10 +1,16 @@
 # chatGPToot 🦣 -- Mastodon OpenAI Chatbot 🤖
 
+## Description
+
 ### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post toots and DALL-E images based on a pre-written prompt or respond to direct mentions.
 
 ## [Follow ChatGPToot](https://masto.ai/@chatGPToot)
 
+[🤖 Mastodon Mention Commands 🤖](#mention-commands-🤖) | [⚖️ License ⚖️](#license-⚖️) |
+
 ## Installation
+
+_assumes you already have a Mastodon bot account and have your secret token, as well as an OpenAI API key_
 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
 -   `npm install` to initiate node and install dependencies
@@ -12,7 +18,7 @@
 -   `cp .env.example .env` will copy `.env.example` to `.env` file
 -   `nano .env` or use text editor to edit `.env` file and add your credentials
 
----
+([top](#description))
 
 ## Arguments
 
@@ -30,7 +36,7 @@
 
 `--image-now` - Generates an image prompt and posts it immediately.
 
----
+([top](#description))
 
 ## Example Usage
 
@@ -52,15 +58,15 @@
 
 `npm run usage` will generate a usage report located in `reports/`
 
----
+([top](#description))
 
-## Mention Commands
+## Mention Commands 🤖
 
 The bot supports the following commands when responding to a mention:
 
 _command must be at the beginning of the mention (after the @mention)_
 
-### Following Only
+### Following Only (bot account must follow user sending command)
 
 -   "{prompt}" - Bot will respond to direct mentions. If no command is used, bot will use your mention text and generate a chat completion for reply.
 -   "//img// {prompt}" or "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
@@ -69,7 +75,7 @@ _command must be at the beginning of the mention (after the @mention)_
 -   "//beta//" or "//beta-application//" - Posts the application link to the user
 -   "//help//" or "//commands//" - Posts a list of commands in reply
 
----
+([top](#description))
 
 ### Admin Only
 
@@ -83,7 +89,7 @@ _command must be at the beginning of the mention (after the @mention)_
 
 ![a cat eating a taco](static/taco_cat.png "indeed, a cat eating a taco.")
 
----
+([top](#description))
 
 ## Usage Logging Utilities
 
@@ -91,9 +97,9 @@ By default, the bot will log all usage to logs/usage_logs.json
 
 `npm run usage` will print and save a usage summary to `reports/`
 
----
+([top](#description))
 
-## License
+## License ⚖️
 
 This project is released under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the source code, subject to the terms and conditions of the license.
 
@@ -103,7 +109,7 @@ We encourage collaboration and contribution to the project. Feel free to fork, m
 
 Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
 
----
+([top](#description))
 
 ---
 
@@ -125,3 +131,5 @@ The fetchConversation function seems to have a logical issue. When calling the f
 
 -   Implement redis for persistent bottleneck rate limiting
 -   Implement fs/promise in chatgptoot.js (download image broke)
+
+([top](#description))
