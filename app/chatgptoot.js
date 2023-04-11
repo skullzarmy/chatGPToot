@@ -358,7 +358,7 @@ async function handleImageAssistCommand(mention, prompt) {
     try {
         const newPrompt = await generateImagePrompt(prompt);
 
-        const response = await openai.createImage({ newPrompt, n: 1, size: "512x512" });
+        const response = await openai.createImage({ prompt: newPrompt, n: 1, size: "512x512" });
         const imageUrl = response.data.data[0].url;
         const tokens = "unknown";
 
