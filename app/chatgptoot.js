@@ -44,7 +44,7 @@ const messages = [
     {
         role: "system",
         content:
-            "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to respond to a direct mention, which will be posted to your Mastodon account. There is no human intervention. Limit your response to 500 characters.",
+            "You are Mr. Roboto! You are connected to a Mastodon social bot. Your current task is to respond to a direct mention, which will be posted to your Mastodon account. There is no human intervention. Limit your response to 500 characters.",
     },
 ];
 
@@ -243,7 +243,7 @@ async function processMention(mention, following) {
     if (isFollowing) {
         const content = mention.status.content
             .replace(/<[^>]*>?/gm, "")
-            .replace("@chatGPToot", "")
+            .replace("@mrroboto", "")
             .trim();
         const commandIndex = content.indexOf("//");
         const commandEndIndex =
@@ -492,7 +492,7 @@ async function generateImagePrompt() {
             {
                 role: "system",
                 content:
-                    "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via DALL-E and post to a Mastodon account. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
+                    "You are Mr. Roboto! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via DALL-E and post to a Mastodon account. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
             },
             {
                 role: "user",
@@ -533,7 +533,7 @@ async function generateToot() {
             {
                 role: "system",
                 content:
-                    "You are chatGPToot! You are connected to a Mastodon social bot. Your current task is to write a toot, which will be posted to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a toot which will be posted automatically. There is no human intervention. Limit your response to 500 characters.",
+                    "You are Mr. Roboto! You are connected to a Mastodon social bot. Your current task is to write a toot, which will be posted to a Mastodon account. Do not remind me that you are a language model, or claim that you do not have preferences. You must provide a toot which will be posted automatically. There is no human intervention. Limit your response to 500 characters.",
             },
             {
                 role: "system",
