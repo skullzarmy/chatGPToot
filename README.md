@@ -63,9 +63,10 @@ _command must be at the beginning of the mention (after the @mention)_
 ### Following Only
 
 -   "{prompt}" - Bot will respond to direct mentions. If no command is used, bot will use your mention text and generate a chat completion for reply.
--   "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//img// {prompt}" or "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//img-asst// {prompt}" or "//image-assist// {prompt}" - Asks GPT-3 to revise your idea into a new image prompt, then sends for DALL-E image generation and returns image and prompt in reply.
 -   "//feedback// {feedback}" - Logs user feedback for review
--   "//beta-application//" - Posts the application link to the user
+-   "//beta//" or "//beta-application//" - Posts the application link to the user
 -   "//help//" or "//commands//" - Posts a list of commands in reply
 
 ---

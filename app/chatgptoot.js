@@ -172,6 +172,7 @@ async function getStatus() {
     try {
         const date = new Date();
         const countfeedback = await countFeedback();
+        const trends = await getTrendingTags();
 
         const prompt = "This is a test. Plese reply with a pleasant message.";
         const response = await openai.createCompletion({
@@ -192,7 +193,7 @@ async function getStatus() {
                 "YYYY-MM-DD HH:mm:ss"
             )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
             response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
-        }`;
+        }\n Trending: ${trends}`;
 
         return status;
     } catch (error) {
@@ -201,7 +202,7 @@ async function getStatus() {
             .tz("UTC")
             .format(
                 "YYYY-MM-DD HH:mm:ss"
-            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
+            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed\n Trending: ${trends}`;
         throw new Error(status);
     }
 }
@@ -256,16 +257,24 @@ async function processMention(mention, following) {
         console.log("Prompt: ", prompt);
 
         switch (command) {
+            case "//img//":
+            case "//imege//":
             case "//image//":
                 handleImageCommand(mention, prompt).catch((error) => console.error(error));
+                break;
+            case "//img-asst//":
+            case "//image-assist//":
+                handleImageAssistCommand(mention, prompt).catch((error) => console.error(error));
                 break;
             case "//help//":
             case "//commands//":
                 handleHelpCommand(mention).catch((error) => console.error(error));
                 break;
+            case "//comment//":
             case "//feedback//":
                 handleFeedbackCommand(mention, prompt).catch((error) => console.error(error));
                 break;
+            case "//beta//":
             case "//beta-application//":
                 handleBetaApplicationCommand(mention).catch((error) => console.error(error));
                 break;
@@ -341,6 +350,63 @@ async function handleImageCommand(mention, prompt) {
         });
     } catch (error) {
         console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
+
+async function handleImageAssistCommand(mention, prompt) {
+    try {
+        const newPrompt = generateImagePrompt(prompt);
+
+        const response = await openai.createImage({ newPrompt, n: 1, size: "512x512" });
+        const imageUrl = response.data.data[0].url;
+        const tokens = "unknown";
+
+        const filename = `new_toot_${Date.now()}.png`;
+        const filepath = path.join(__dirname, "..", "media", filename);
+
+        await downloadImage(imageUrl, filepath);
+        console.log("Image downloaded to " + filepath);
+
+        const mediaResponse = await mastodon.post("media", {
+            file: fs.createReadStream(filepath),
+        });
+
+        const mediaId = mediaResponse.data.id;
+        let tootText;
+        let tootParams = {
+            media_ids: [mediaId],
+            visibility: "public",
+        };
+
+        if (mention) {
+            tootText = `@${mention.account.acct} Image prompt: ${newPrompt.substring(
+                0,
+                484 - mention.account.username.length
+            )}`;
+            tootParams.status = tootText;
+            tootParams.in_reply_to_id = mention.status.id;
+
+            logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
+        } else {
+            tootText = `Image prompt: ${newPrompt.substring(0, 486)}`;
+            tootParams.status = tootText;
+
+            logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
+        }
+
+        const tootResponse = await mastodon.post("statuses", tootParams);
+        console.log("Toot with image posted:", tootResponse.data.uri);
+
+        fs.unlink(filepath, (err) => {
+            if (err) {
+                console.error("Error deleting file:", err);
+            } else {
+                console.log("File deleted:", filepath);
+            }
+        });
+    } catch (error) {
+        console.error(`Error in handleImageAssistCommand: ${JSON.stringify(error)}`);
         throw error;
     }
 }
@@ -486,18 +552,21 @@ async function handleImageNowCommand(mention, prompt) {
     }
 }
 
-async function generateImagePrompt() {
+async function generateImagePrompt(prompt = false) {
+    if (prompt) {
+        prompt =
+            "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. This is my idea: " +
+            prompt;
+    } else {
+        prompt =
+            "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. What image would you like to create?";
+    }
     try {
         const msg = [
             {
                 role: "system",
                 content:
                     "You are Mr. Roboto! You are connected to a Mastodon social bot. Your current task is to write an image generation prompt, which will be used to automatically generate an image via DALL-E and post to a Mastodon account. You must provide a prompt which will be turned into an image and posted automatically. There is no human intervention. Limit your response to 500 characters.",
-            },
-            {
-                role: "user",
-                content:
-                    "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. What image would you like to create?",
             },
         ];
 
@@ -513,6 +582,11 @@ async function generateImagePrompt() {
                 });
             }
         }
+
+        msg.push({
+            role: "user",
+            content: prompt,
+        });
 
         const response = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
