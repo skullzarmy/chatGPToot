@@ -605,7 +605,7 @@ async function generateImagePrompt(uPrompt = false) {
     }
 }
 
-async function generateToot() {
+async function generateToot(prompt = false) {
     try {
         const msg = [
             {
@@ -620,6 +620,13 @@ async function generateToot() {
         ];
 
         await addContext(msg);
+
+        if (prompt) {
+            msg.push({
+                role: "user",
+                content: `Your admin would like you to discuss: ${prompt}`,
+            });
+        }
 
         const response = await openai.createChatCompletion({
             model: "gpt-3.5-turbo",
