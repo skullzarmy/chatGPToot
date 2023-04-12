@@ -580,25 +580,8 @@ async function handleRssLoop() {
     if (newItems.length > 0) {
         for (const item of newItems) {
             try {
-                let mediaId = null;
-                if (item.enclosure) {
-                    console.log(item.enclosure[0].$.url);
-                    item.image = item.enclosure[0].$.url;
-                    const filepath = await downloadImage(item.image, "media");
-                    const mediaResponse = await mastodon.post("media", {
-                        file: fs.createReadStream(filepath),
-                    });
-                    mediaId = mediaResponse.data.id;
-                    fs.unlink(filepath, (err) => {
-                        if (err) {
-                            console.error("Error deleting file:", err);
-                        } else {
-                            console.log("File deleted:", filepath);
-                        }
-                    });
-                }
                 const toot = await generateToot(false, item);
-                postToot(toot, "public", mediaId);
+                postToot(toot, "public", null);
                 rss.logItem(item.guid[0]);
             } catch (error) {
                 console.error("Error processing RSS item:", error);
