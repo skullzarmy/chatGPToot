@@ -589,7 +589,7 @@ async function handleRssLoop() {
         }
     }
     const now = moment().tz("America/Los_Angeles");
-    console.log(`RSS loop called at ${now.format()} - ${newItems.length} new items processed`);
+    console.log(`${newItems.length} new RSS items processed at ${now.format()}`);
 }
 
 //
