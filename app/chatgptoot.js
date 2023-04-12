@@ -772,7 +772,7 @@ async function main() {
             let rssCronJob;
             const rssInterval = "*/15 * * * *"; // Check RSS every 15 minutes
             rssCronJob = cron.schedule(rssInterval, () => {
-                checkRss();
+                handleRssLoop();
             });
         }
 
