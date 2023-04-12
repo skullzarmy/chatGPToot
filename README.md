@@ -8,6 +8,8 @@
 
 [🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-%EF%B8%8F) |
 
+<a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+
 ## Installation
 
 _assumes you already have a Mastodon bot account and have your secret token, as well as an OpenAI API key_
@@ -31,6 +33,8 @@ _assumes you already have a Mastodon bot account and have your secret token, as 
 `--no-toot` - Disables the automatic toot loop.
 
 `--no-mention` - Disables the automatic mention loop.
+
+`--no-rss` - Disabled the RSS checker loop.
 
 `--toot-now` - Generates a toot and posts it immediately.
 
@@ -99,6 +103,12 @@ By default, the bot will log all usage to logs/usage_logs.json
 
 ([top](#description))
 
+## RSS Feed Subscription
+
+Bot can now subscribe to RSS feeds, track previously known items, and generate toots about newly found items in the feed.
+
+Modify the `config.json` file and add any number of RSS feeds to follow. Be careful! It will auto-post all newly found items without any care in the world about spamming everyone!
+
 ## License ⚖️
 
 This project is released under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the source code, subject to the terms and conditions of the license.
@@ -108,6 +118,8 @@ The [MIT License](LICENSE.txt) is a permissive open-source software license that
 We encourage collaboration and contribution to the project. Feel free to fork, modify, and share your improvements with the community. Our goal is to make this software as useful and accessible as possible, and your contributions will help us achieve that.
 
 Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
+
+<a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
 
 ([top](#description))
 

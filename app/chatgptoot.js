@@ -1,63 +1,26 @@
 const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
-const { Configuration, OpenAIApi } = require("openai");
-const M = require("mastodon");
 const fs = require("fs");
 const path = require("path");
 const request = require("request");
-const { Group } = require("bottleneck");
 const cron = require("node-cron");
 const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
 const { logFeedback, countFeedback } = require("./feedback_logger");
-// const redis = require("redis");
-
-const example_image_prompts = [
-    "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art, 8-bit",
-    "Winnie the Pooh driving a tesla in a bathroom, Digital art, E H Shepard",
-    "An alien eating a plate of cheesy nachos on Easter Island, Realistic photograph, 8K, HDR, Dan LuVisi",
-    "A bag of marbles melting into a puddle in space, 50's print advertisement, vintage style, Americana",
-    "A wedding ring covered in cheese in a farm, Victorian Newspaper article, faded paper",
-    "A macro photo of a fly on a leaf, Surrealism, hyperrealistic, 8K, HDR, Unreal Engine, Unity",
-];
+const { rssHandler } = require("./rss_handler");
+const config = require("./config.json");
+const rss_urls = config.rss_urls;
+const rss = new rssHandler(rss_urls);
+const example_image_prompts = config.example_image_prompts;
+const messages = config.messages;
+const { openai, initMastodon, rateLimiterGroup } = require("./init");
 let mastodon;
-function initMastodon(isDevMode) {
-    if (!isDevMode) {
-        mastodon = new M({
-            access_token: process.env.MASTODON_ACCESS_TOKEN,
-            api_url: process.env.MASTODON_API_URL,
-        });
-    } else {
-        mastodon = {
-            post: async (endpoint, params) => {
-                console.log(`Pretending to post to endpoint '${endpoint}' with params:`, params);
-                return Promise.resolve({ data: { id: 0 } });
-            },
-        };
-    }
-}
 
-const configuration = new Configuration({ apiKey: process.env.OPENAI_KEY });
-const openai = new OpenAIApi(configuration);
-
-const messages = [
-    {
-        role: "system",
-        content:
-            "You are Mr. Roboto! You are connected to a Mastodon social bot. Your current task is to respond to a direct mention, which will be posted to your Mastodon account. There is no human intervention. Limit your response to 500 characters.",
-    },
-];
-
-const MAX_TOKENS = 3000; // You can adjust this value based on your requirements
-
-const rateLimiterGroup = new Group({
-    maxConcurrent: 1, // Only 1 request per user at a time
-    minTime: 15000, // 15 seconds between requests
-    reservoir: 50, // tokens per user
-    reservoirRefreshAmount: 50,
-    reservoirIncreaseMaximum: 50,
-    reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
-});
+//
+//
+//  Utility functions
+//
+//
 
 function downloadImage(url, dest) {
     return new Promise((resolve, reject) => {
@@ -72,13 +35,20 @@ function downloadImage(url, dest) {
 }
 
 async function addContext(msgs) {
-    const topTags = await getTrendingTags();
+    // const topTags = await getTrendingTags();
     const date = new Date();
     const systemMessage = {
         role: "system",
         content: `The current date is ${date.toLocaleString("en-US", {
             timeZone: "UTC",
-        })} in UTC. The top tags are ${topTags.join(", ")}.`,
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+        })} in UTC.`,
     };
     msgs.push(systemMessage);
 }
@@ -156,6 +126,12 @@ function dismissNotification(id) {
     });
 }
 
+//
+//
+//  Getter functions
+//
+//
+
 function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
 }
@@ -173,7 +149,7 @@ async function getStatus() {
     try {
         const date = new Date();
         const countfeedback = await countFeedback();
-        const trends = await getTrendingTags();
+        // const trends = await getTrendingTags();
 
         const prompt = "This is a test. Plese reply with a pleasant message.";
         const response = await openai.createCompletion({
@@ -194,7 +170,7 @@ async function getStatus() {
                 "YYYY-MM-DD HH:mm:ss"
             )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
             response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
-        }\n Trending: ${trends}`;
+        }`;
 
         return status;
     } catch (error) {
@@ -203,7 +179,7 @@ async function getStatus() {
             .tz("UTC")
             .format(
                 "YYYY-MM-DD HH:mm:ss"
-            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed\n Trending: ${trends}`;
+            )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
         throw new Error(status);
     }
 }
@@ -211,7 +187,9 @@ async function getStatus() {
 async function getTrendingTags() {
     const response = await mastodon.get("trends/tags");
     const tags = response.data.map((tag) => tag.name);
-    return tags;
+    // return tags;
+    return false;
+    // disabled because botsin.space api disabled trending tags data
 }
 
 async function fetchConversation(statusId, messages = [], tokens = 0) {
@@ -221,7 +199,7 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
         const content = status.data.content.replace(/<[^>]*>?/gm, "");
         const newTokens = tokens + content.split(" ").length;
 
-        if (newTokens <= MAX_TOKENS) {
+        if (newTokens <= config.max_tokens) {
             if (inReplyToId) {
                 await fetchConversation(inReplyToId, messages, newTokens);
             }
@@ -237,6 +215,33 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
         console.error(`Mastodon Error: ${error}`);
     }
 }
+
+async function checkMentions() {
+    try {
+        const notifications = await mastodon.get("notifications", { types: ["mention"] });
+        console.log(`${notifications.data.length} mentions found at ${new Date()}`);
+        if (notifications.data.length > 0) {
+            const followingResponse = await getFollowing();
+            const following = followingResponse.data;
+
+            for (const mention of notifications.data) {
+                const userId = mention.account.id;
+                const rateLimiter = rateLimiterGroup.key(userId);
+
+                rateLimiter.schedule(() => processMention(mention, following));
+            }
+        }
+    } catch (error) {
+        console.error("Error checking mentions:", error);
+        throw error;
+    }
+}
+
+//
+//
+//  Processor / Handler functions
+//
+//
 
 async function processMention(mention, following) {
     await dismissNotification(mention.id);
@@ -556,6 +561,60 @@ async function handleImageNowCommand(mention, prompt) {
     }
 }
 
+async function handleImageLoop() {
+    const prompt = await generateImagePrompt();
+    handleImageCommand(null, prompt);
+    const now = moment().tz("America/Los_Angeles");
+    console.log(`Image loop called at ${now.format()}`);
+}
+
+async function handleTootLoop() {
+    const toot = await generateToot();
+    postToot(toot, "public", null);
+    const now = moment().tz("America/Los_Angeles");
+    console.log(`Toot loop called at ${now.format()}`);
+}
+
+async function handleRssLoop() {
+    const newItems = await rss.checkNewItems();
+    if (newItems.length > 0) {
+        for (const item of newItems) {
+            try {
+                let mediaId = null;
+                if (item.enclosure) {
+                    console.log(item.enclosure[0].$.url);
+                    item.image = item.enclosure[0].$.url;
+                    const filepath = await downloadImage(item.image, "media");
+                    const mediaResponse = await mastodon.post("media", {
+                        file: fs.createReadStream(filepath),
+                    });
+                    mediaId = mediaResponse.data.id;
+                    fs.unlink(filepath, (err) => {
+                        if (err) {
+                            console.error("Error deleting file:", err);
+                        } else {
+                            console.log("File deleted:", filepath);
+                        }
+                    });
+                }
+                const toot = await generateToot(false, item);
+                postToot(toot, "public", mediaId);
+                rss.logItem(item.guid[0]);
+            } catch (error) {
+                console.error("Error processing RSS item:", error);
+            }
+        }
+    }
+    const now = moment().tz("America/Los_Angeles");
+    console.log(`RSS loop called at ${now.format()} - ${newItems.length} new items processed`);
+}
+
+//
+//
+//  Generator Functions
+//
+//
+
 async function generateImagePrompt(uPrompt = false) {
     if (uPrompt) {
         uPrompt =
@@ -605,7 +664,7 @@ async function generateImagePrompt(uPrompt = false) {
     }
 }
 
-async function generateToot(prompt = false) {
+async function generateToot(prompt = false, rss = false) {
     try {
         const msg = [
             {
@@ -621,11 +680,40 @@ async function generateToot(prompt = false) {
 
         await addContext(msg);
 
-        if (prompt) {
+        if (prompt && !rss) {
             msg.push({
                 role: "user",
                 content: `Your admin would like you to discuss: ${prompt}`,
             });
+        }
+
+        if (rss) {
+            const title = rss.title;
+            const pubDate = rss.pubDate;
+            const link = rss.link;
+            const content = rss["content:encoded"][0];
+            msg.push(
+                {
+                    role: "user",
+                    content: `We posted a new blog post! Title: ${title}`,
+                },
+                {
+                    role: "user",
+                    content: `Published: ${pubDate}`,
+                },
+                {
+                    role: "user",
+                    content: `Link: ${link}`,
+                },
+                {
+                    role: "user",
+                    content: `Content (first 500 chars): ${content.substring(0, 500)}`,
+                },
+                {
+                    role: "user",
+                    content: `Please summarize the new blog post into a new toot, inviting our followers to read the full post. Please include a link.`,
+                }
+            );
         }
 
         const response = await openai.createChatCompletion({
@@ -649,40 +737,11 @@ async function generateToot(prompt = false) {
     }
 }
 
-async function checkMentions() {
-    try {
-        const notifications = await mastodon.get("notifications", { types: ["mention"] });
-        console.log(`${notifications.data.length} mentions found at ${new Date()}`);
-        if (notifications.data.length > 0) {
-            const followingResponse = await getFollowing();
-            const following = followingResponse.data;
-
-            for (const mention of notifications.data) {
-                const userId = mention.account.id;
-                const rateLimiter = rateLimiterGroup.key(userId);
-
-                rateLimiter.schedule(() => processMention(mention, following));
-            }
-        }
-    } catch (error) {
-        console.error("Error checking mentions:", error);
-        throw error;
-    }
-}
-
-async function handleImageLoop() {
-    const prompt = await generateImagePrompt();
-    handleImageCommand(null, prompt);
-    const now = moment().tz("America/Los_Angeles");
-    console.log(`Image loop called at ${now.format()}`);
-}
-
-async function handleTootLoop() {
-    const toot = await generateToot();
-    postToot(toot, "public", null);
-    const now = moment().tz("America/Los_Angeles");
-    console.log(`Toot loop called at ${now.format()}`);
-}
+//
+//
+//  Main Function
+//
+//
 
 async function main() {
     const botStartTime = moment().tz("UTC");
@@ -692,11 +751,13 @@ async function main() {
     const noImage = args.includes("--no-image");
     const noToot = args.includes("--no-toot");
     const noMention = args.includes("--no-mention");
+    const noRss = args.includes("--no-rss");
     const tootNow = args.includes("--toot-now");
     const imageNow = args.includes("--image-now");
+    const rssNow = args.includes("--rss-now");
     const isDevMode = args.includes("--dev-mode");
 
-    initMastodon(isDevMode);
+    mastodon = initMastodon(isDevMode);
 
     if (!noLoop) {
         if (!noMention) {
@@ -704,6 +765,14 @@ async function main() {
             const mentionInterval = "*/15 * * * * *"; // Check mentions every 15 seconds
             mentionCronJob = cron.schedule(mentionInterval, () => {
                 checkMentions();
+            });
+        }
+
+        if (!noRss) {
+            let rssCronJob;
+            const rssInterval = "*/15 * * * *"; // Check RSS every 15 minutes
+            rssCronJob = cron.schedule(rssInterval, () => {
+                checkRss();
             });
         }
 
@@ -744,9 +813,17 @@ async function main() {
     if (imageNow) {
         await handleImageLoop();
     }
+    if (rssNow) {
+        await handleRssLoop();
+    }
     if (!noMention) {
         await checkMentions();
     }
 }
 
+//
+//
+//  Run Main Function
+//
+//
 main();

@@ -6,7 +6,11 @@ const feedbackLogFile = path.join(path.resolve(__dirname, "..", "feedback"), "fe
 async function readFeedbackLog() {
     try {
         const data = await fs.readFile(feedbackLogFile, "utf-8");
-        return JSON.parse(data);
+        const parsedData = JSON.parse(data);
+        if (!parsedData.feedback) {
+            parsedData.feedback = [];
+        }
+        return parsedData;
     } catch (error) {
         if (error.code === "ENOENT") {
             console.log("No feedback logs yet. Creating a new file...");
