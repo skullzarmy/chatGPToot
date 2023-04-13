@@ -36,6 +36,36 @@ function downloadImage(url, dest) {
     });
 }
 
+async function shortenUrl(longUrl) {
+    const url = "https://gotiny.cc/api";
+    const options = {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ input: longUrl }),
+    };
+
+    console.log(`Shortening URL: ${longUrl}`);
+
+    try {
+        const response = await new Promise((resolve, reject) => {
+            request(url, options, (error, response, body) => {
+                if (error) {
+                    reject(error);
+                } else {
+                    resolve(response);
+                }
+            });
+        });
+
+        const json = JSON.parse(response.body);
+        const shortUrl = `https://gotiny.cc/${json[0].code}`;
+        return shortUrl;
+    } catch (error) {
+        console.error(`Error shortening URL: ${longUrl}. Using original URL instead.`);
+        return longUrl;
+    }
+}
+
 async function addContext(msgs) {
     // const topTags = await getTrendingTags();
     const date = new Date();
@@ -62,9 +92,10 @@ async function addContext(msgs) {
     ];
 
     for (const item of news) {
+        const shortLink = await shortenUrl(item.link);
         newsMsg.push({
             role: "system",
-            content: `${item.title} - ${item.description} - ${item.pubDate}`,
+            content: `${item.title} - ${item.description} - ${item.pubDate} - ${shortLink}`,
         });
     }
     msgs.push(systemMessage);
@@ -451,10 +482,11 @@ async function handleNewsCommand(mention) {
         ];
 
         for (const item of news) {
+            const shortUrl = await shortenUrl(item.link);
             msg.push(
                 {
                     role: "system",
-                    content: `${item.title} - ${item.description} - ${item.pubDate}`,
+                    content: `${item.title} - ${item.description} - ${item.pubDate} - ${shortUrl}`,
                 },
                 {
                     role: "system",
@@ -866,9 +898,14 @@ async function main() {
     }
 }
 
+// async function testMode() {
+//     // code to run in test mode
+// }
+// testMode();
+
 //
 //
 //  Run Main Function
 //
 //
-main();
+main(); // disable this line when running in test mode
