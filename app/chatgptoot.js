@@ -294,6 +294,7 @@ async function processMention(mention, following) {
                 break;
             case "//news//":
                 handleNewsCommand(mention).catch((error) => console.error(error));
+                break;
             case "//help//":
             case "//commands//":
                 handleHelpCommand(mention).catch((error) => console.error(error));
@@ -472,7 +473,7 @@ async function handleNewsCommand(mention) {
             messages: msg,
         });
 
-        const reply = `@${mention.account.acct} ${response.data.choices[0].text}`;
+        const reply = `@${mention.account.acct} ${response.data.choices[0].message.content}`;
         postToot(reply, "public", mention.status.id).catch((error) => console.error(error));
         logUsage(mention.account.id, mention.status.id, "news", "unknown", "news");
     } catch (error) {
@@ -484,7 +485,7 @@ async function handleNewsCommand(mention) {
 async function handleHelpCommand(mention) {
     try {
         await postToot(
-            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //imagee-assist//, //news//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information.`,
+            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //image-assist//, //news//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information.`,
             "public",
             mention.status.id
         );
