@@ -7,16 +7,11 @@ const { exec } = require("child_process");
 
 // Enable CORS only for the specified origin
 // app.use(cors({ origin: "https://socaltechlabs.com" }));
-// Enable CORS for all origins
-app.use(cors());
 
-app.use(
-    "/status",
-    rateLimit({
-        windowMs: 5 * 60 * 1000, // 5 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
-    })
-);
+const limiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 100, // limit each IP to 100 requests per windowMs
+});
 function isBotRunning(callback) {
     exec("ps aux | grep node", (error, stdout, stderr) => {
         if (error) {
@@ -44,7 +39,7 @@ function isBlogOnline(callback) {
     });
 }
 
-app.get("/status", (req, res) => {
+app.get("/status", cors(), limiter, (req, res) => {
     isBotRunning((botRunning) => {
         isBlogOnline((blogOnline) => {
             const botStatus = botRunning ? "online" : "offline";
