@@ -5,6 +5,12 @@ const rateLimit = require("express-rate-limit");
 const port = process.env.PORT || 3000;
 const { exec } = require("child_process");
 
+var corsOptions = {
+    origin: "*",
+    methods: "GET",
+    optionsSuccessStatus: 200, // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+
 // Enable CORS only for the specified origin
 // app.use(cors({ origin: "https://socaltechlabs.com" }));
 
@@ -39,7 +45,7 @@ function isBlogOnline(callback) {
     });
 }
 
-app.get("/status", cors(), limiter, (req, res) => {
+app.get("/status", cors(corsOptions), limiter, (req, res) => {
     isBotRunning((botRunning) => {
         isBlogOnline((blogOnline) => {
             const botStatus = botRunning ? "online" : "offline";
