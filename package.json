@@ -14,8 +14,8 @@
         "single-mention": "node app/chatgptoot.js --no-loop --no-toot --no-image",
         "tail-logs": "tail -f logs/bot-log.log",
         "usage": "node app/usage_log_summary.js",
-        "status-server-local": "nohup node app/status_server.js > logs/bot-log.log 2>&1 &",
-        "status-server-ngrok": "nohup ngrok http 3000 > logs/bot-log.log 2>&1 &",
+        "status-server-local": "nohup node app/status_server.js > logs/local-status-log.log 2>&1 &",
+        "status-server-ngrok": "nohup ngrok http 3000 > logs/ngrok-log.log 2>&1 &",
         "status-server": "npm run status-server-local && npm run status-server-ngrok"
     },
     "keywords": [
