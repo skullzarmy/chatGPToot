@@ -25,4 +25,4 @@ class newsHandler {
     }
 }
 
-module.exports = newsHandler;
+module.exports = { newsHandler };
