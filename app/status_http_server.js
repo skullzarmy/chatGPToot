@@ -1,4 +1,5 @@
-require("dotenv").config();
+const dotenvSafe = require("dotenv-safe");
+dotenvSafe.config();
 const http = require("http");
 const { exec } = require("child_process");
 const port = process.env.PORT || 3000;
