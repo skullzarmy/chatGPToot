@@ -8,9 +8,11 @@ const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
 const { logFeedback, countFeedback } = require("./feedback_logger");
 const { rssHandler } = require("./rss_handler");
+const { newsHandler } = require("./news_handler");
 const config = require(path.join(__dirname, "..", "config.json"));
 const rss_urls = config.rss_urls;
 const rss = new rssHandler(rss_urls);
+const newsChecker = new newsHandler();
 const example_image_prompts = config.example_image_prompts;
 const messages = config.messages;
 const { openai, initMastodon, rateLimiterGroup } = require("./init");
@@ -39,7 +41,7 @@ async function addContext(msgs) {
     const date = new Date();
     const systemMessage = {
         role: "system",
-        content: `The current date is ${date.toLocaleString("en-US", {
+        content: `Adding context: The current date is ${date.toLocaleString("en-US", {
             timeZone: "UTC",
             weekday: "long",
             year: "numeric",
@@ -50,7 +52,23 @@ async function addContext(msgs) {
             second: "2-digit",
         })} in UTC.`,
     };
+
+    const news = await newsChecker.fetchNews(3);
+    const newsMsg = [
+        {
+            role: "system",
+            content: "Adding context: Listing latest AI and LLM news headlines",
+        },
+    ];
+
+    for (const item of news) {
+        newsMsg.push({
+            role: "system",
+            content: `${item.title} - ${item.description} - ${item.pubDate}`,
+        });
+    }
     msgs.push(systemMessage);
+    msgs.push(...newsMsg);
 }
 
 async function postToot(status, visibility, in_reply_to_id) {
@@ -274,6 +292,8 @@ async function processMention(mention, following) {
             case "//image-assist//":
                 handleImageAssistCommand(mention, prompt).catch((error) => console.error(error));
                 break;
+            case "//news//":
+                handleNewsCommand(mention).catch((error) => console.error(error));
             case "//help//":
             case "//commands//":
                 handleHelpCommand(mention).catch((error) => console.error(error));
@@ -419,10 +439,52 @@ async function handleImageAssistCommand(mention, prompt) {
     }
 }
 
+async function handleNewsCommand(mention) {
+    try {
+        const news = await newsChecker.fetchNews(3);
+        const msg = [
+            {
+                role: "system",
+                content: "Listing latest news articles (limited to AI and LLM related content and only three articles)",
+            },
+        ];
+
+        for (const item of news) {
+            msg.push(
+                {
+                    role: "system",
+                    content: `${item.title} - ${item.description} - ${item.pubDate}`,
+                },
+                {
+                    role: "system",
+                    content: `${item.content}`,
+                }
+            );
+        }
+
+        msg.push({
+            role: "user",
+            content: "Please summarize the latest news articles for me",
+        });
+
+        const response = await openai.createChatCompletion({
+            model: "gpt-3.5-turbo",
+            messages: msg,
+        });
+
+        const reply = `@${mention.account.acct} ${response.data.choices[0].text}`;
+        postToot(reply, "public", mention.status.id).catch((error) => console.error(error));
+        logUsage(mention.account.id, mention.status.id, "news", "unknown", "news");
+    } catch (error) {
+        console.error(`Error in handleNewsCommand: ${JSON.stringify(error)}`);
+        throw error;
+    }
+}
+
 async function handleHelpCommand(mention) {
     try {
         await postToot(
-            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco`,
+            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //imagee-assist//, //news//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information.`,
             "public",
             mention.status.id
         );

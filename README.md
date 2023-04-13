@@ -75,6 +75,7 @@ _command must be at the beginning of the mention (after the @mention)_
 -   "{prompt}" - Bot will respond to direct mentions. If no command is used, bot will use your mention text and generate a chat completion for reply.
 -   "//img// {prompt}" or "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
 -   "//img-asst// {prompt}" or "//image-assist// {prompt}" - Asks GPT-3 to revise your idea into a new image prompt, then sends for DALL-E image generation and returns image and prompt in reply.
+-   "//news//" – For now this only checks for a few articles with keywords "gpt OR ai OR llm OR openai OR copilot OR midjourney" in Science or Technology categories. It will then read and summarize them for you. I plan to expand this to take prompts for search criteria but the news API costs $$. Feel free to buy me a beer to help support the development!
 -   "//feedback// {feedback}" - Logs user feedback for review
 -   "//beta//" or "//beta-application//" - Posts the application link to the user
 -   "//help//" or "//commands//" - Posts a list of commands in reply
