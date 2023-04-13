@@ -1,6 +1,7 @@
 const express = require("express");
 const app = express();
-const cors = require("cors");
+// const cors = require("cors");
+const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const port = process.env.PORT || 3000;
 const { exec } = require("child_process");
@@ -18,6 +19,7 @@ const limiter = rateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
     max: 100, // limit each IP to 100 requests per windowMs
 });
+
 function isBotRunning(callback) {
     exec("ps aux | grep node", (error, stdout, stderr) => {
         if (error) {
@@ -29,6 +31,7 @@ function isBotRunning(callback) {
         const lines = stdout.trim().split("\n");
         const botRunning = lines.some((line) => line.includes("app/chatgptoot.js"));
         callback(botRunning);
+        return;
     });
 }
 
@@ -45,10 +48,17 @@ function isBlogOnline(callback) {
     });
 }
 
-app.get("/status", cors(corsOptions), limiter, (req, res) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    res.header("Access-Control-Allow-Methods", "GET");
+app.use(helmet());
 
+app.use((req, res, next) => {
+    // res.header("Access-Control-Allow-Origin", "https://socaltechlabs.com");
+    // res.header("Access-Control-Allow-Methods", "GET");
+    res.header("Access-Control-Allow-Origin", true);
+    res.header("Access-Control-Allow-Methods", "GET");
+    next();
+});
+
+app.get("/status", limiter, (req, res) => {
     isBotRunning((botRunning) => {
         isBlogOnline((blogOnline) => {
             const botStatus = botRunning ? "online" : "offline";
