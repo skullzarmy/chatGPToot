@@ -34,6 +34,19 @@ function isBlogOnline(callback) {
 }
 
 const server = http.createServer((req, res) => {
+    // Set the CORS headers
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "X-Auth-Token");
+    res.setHeader("Content-Type", "application/json");
+
+    if (req.method === "OPTIONS") {
+        // Preflight request. Reply successfully:
+        res.statusCode = 200;
+        res.end();
+        return;
+    }
+
     if (req.url === "/status" && req.method === "GET") {
         const requestToken = req.headers["x-auth-token"];
 
@@ -42,10 +55,6 @@ const server = http.createServer((req, res) => {
             res.end("Unauthorized");
             return;
         }
-        // Set the CORS headers
-        res.setHeader("Access-Control-Allow-Origin", "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET");
-        res.setHeader("Content-Type", "application/json");
 
         isBotRunning((botRunning) => {
             isBlogOnline((blogOnline) => {
