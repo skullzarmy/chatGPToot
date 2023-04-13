@@ -1,9 +1,22 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const port = process.env.PORT || 3000;
 const { exec } = require("child_process");
 
+// Enable CORS only for the specified origin
+// app.use(cors({ origin: "https://socaltechlabs.com" }));
+// Enable CORS for all origins
+app.use(cors());
+
+app.use(
+    "/status",
+    rateLimit({
+        windowMs: 5 * 60 * 1000, // 5 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+    })
+);
 function isBotRunning(callback) {
     exec("ps aux | grep node", (error, stdout, stderr) => {
         if (error) {
@@ -30,26 +43,6 @@ function isBlogOnline(callback) {
         callback(blogOnline);
     });
 }
-
-const apiKeyMiddleware = (req, res, next) => {
-    const apiKey = req.query.apiKey;
-
-    if (apiKey === process.env.STATUS_API_KEY) {
-        next();
-    } else {
-        res.status(401).json({ error: "Unauthorized" });
-    }
-};
-
-app.use("/status", apiKeyMiddleware);
-
-app.use(
-    "/status",
-    rateLimit({
-        windowMs: 5 * 60 * 1000, // 5 minutes
-        max: 100, // limit each IP to 100 requests per windowMs
-    })
-);
 
 app.get("/status", (req, res) => {
     isBotRunning((botRunning) => {
