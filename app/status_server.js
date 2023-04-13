@@ -46,6 +46,9 @@ function isBlogOnline(callback) {
 }
 
 app.get("/status", cors(corsOptions), limiter, (req, res) => {
+    res.header("Access-Control-Allow-Origin", "*");
+    res.header("Access-Control-Allow-Methods", "GET");
+
     isBotRunning((botRunning) => {
         isBlogOnline((blogOnline) => {
             const botStatus = botRunning ? "online" : "offline";
