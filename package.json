@@ -13,7 +13,10 @@
         "single-image": "node app/chatgptoot.js --no-loop --no-mention --no-toot --image-now",
         "single-mention": "node app/chatgptoot.js --no-loop --no-toot --no-image",
         "tail-logs": "tail -f logs/bot-log.log",
-        "usage": "node app/usage_log_summary.js"
+        "usage": "node app/usage_log_summary.js",
+        "status-server-local": "nohup node app/status_server.js > logs/bot-log.log 2>&1 &",
+        "status-server-ngrok": "nohup ngrok http 3000 > logs/bot-log.log 2>&1 &",
+        "status-server": "npm run status-server-local && npm run status-server-ngrok"
     },
     "keywords": [
         "mastodon",
@@ -27,6 +30,8 @@
         "bottleneck": "^2.19.5",
         "date-fns": "^2.29.3",
         "dotenv-safe": "^8.2.0",
+        "express": "^4.18.2",
+        "express-rate-limit": "^6.7.0",
         "mastodon": "^1.2.2",
         "moment-timezone": "^0.5.43",
         "node-cron": "^3.0.2",
