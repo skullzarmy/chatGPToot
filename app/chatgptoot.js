@@ -2,7 +2,7 @@ const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
 const fs = require("fs");
 const path = require("path");
-const request = require("request");
+const axios = require("axios");
 const cron = require("node-cron");
 const moment = require("moment-timezone");
 const { logUsage } = require("./usage_logger");
@@ -24,40 +24,38 @@ let mastodon;
 //
 //
 
-function downloadImage(url, dest) {
-    return new Promise((resolve, reject) => {
-        try {
-            request.head(url, function (err, res, body) {
-                request(url).pipe(fs.createWriteStream(dest)).on("close", resolve).on("error", reject);
-            });
-        } catch (error) {
-            reject(error);
-        }
-    });
+async function downloadImage(url, dest) {
+    try {
+        const response = await axios({
+            method: "get",
+            url: url,
+            responseType: "stream",
+        });
+
+        const writer = fs.createWriteStream(dest);
+        response.data.pipe(writer);
+
+        return new Promise((resolve, reject) => {
+            writer.on("finish", resolve);
+            writer.on("error", reject);
+        });
+    } catch (error) {
+        throw new Error("Error downloading image: " + error.message);
+    }
 }
 
 async function shortenUrl(longUrl) {
     const url = "https://gotiny.cc/api";
-    const options = {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ input: longUrl }),
-    };
+    const data = { input: longUrl };
 
     console.log(`Shortening URL: ${longUrl}`);
 
     try {
-        const response = await new Promise((resolve, reject) => {
-            request(url, options, (error, response, body) => {
-                if (error) {
-                    reject(error);
-                } else {
-                    resolve(response);
-                }
-            });
+        const response = await axios.post(url, data, {
+            headers: { "Content-Type": "application/json" },
         });
 
-        const json = JSON.parse(response.body);
+        const json = response.data;
         const shortUrl = `https://gotiny.cc/${json[0].code}`;
         return shortUrl;
     } catch (error) {

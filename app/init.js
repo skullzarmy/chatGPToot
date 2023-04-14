@@ -1,5 +1,6 @@
 const { Configuration, OpenAIApi } = require("openai");
-const M = require("mastodon");
+const path = require("path");
+const M = require(path.join(__dirname, "..", "/modules/tusk/mastodon"));
 const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
 const { Group } = require("bottleneck");
