@@ -144,10 +144,6 @@ Overall, the script looks well-structured and functional. However, I found a few
 
 Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
 
-### fetchConversation function:
-
-The fetchConversation function seems to have a logical issue. When calling the function with await fetchConversation(mention.status.id, conversation);, it will push the messages to the conversation array, but since it's an async function, the result may not be available immediately. To fix this, consider returning the updated messages array from the fetchConversation function and assigning it back to the conversation variable.
-
 ## To Do
 
 -   Implement redis for persistent bottleneck rate limiting

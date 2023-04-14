@@ -250,7 +250,7 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
 
         if (newTokens <= config.max_tokens) {
             if (inReplyToId) {
-                await fetchConversation(inReplyToId, messages, newTokens);
+                messages = await fetchConversation(inReplyToId, messages, newTokens);
             }
 
             const message = {
@@ -263,6 +263,7 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
     } catch (error) {
         console.error(`Mastodon Error: ${error}`);
     }
+    return messages;
 }
 
 async function checkMentions() {
