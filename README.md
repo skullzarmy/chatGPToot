@@ -1,14 +1,22 @@
 # chatGPToot 🦣 -- Mastodon OpenAI Chatbot 🤖
 
+![GitHub issues](https://img.shields.io/github/issues-raw/skullzarmy/chatGPToot)
+![GitHub pull requests](https://img.shields.io/github/issues-pr-raw/skullzarmy/chatGPToot)
+
 ## Description
 
 ### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post toots and DALL-E images based on a pre-written prompt or respond to direct mentions.
 
-## [Follow ChatGPToot](https://masto.ai/@chatGPToot)
+![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fsocaltechlab.com%2F.netlify%2Ffunctions%2FgithubProxy)
 
-[🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-%EF%B8%8F) |
+![Mastodon Follow](https://img.shields.io/mastodon/follow/110178159113810309?domain=https%3A%2F%2Fbotsin.space&style=social)
+![Mastodon Follow](https://img.shields.io/mastodon/follow/109988942401723597?domain=https%3A%2F%2Fmastodon.social&style=social)
 
 <a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
+
+---
+
+[🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-%EF%B8%8F) |
 
 ## Installation
 
