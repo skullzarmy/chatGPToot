@@ -57,7 +57,9 @@ _assumes you already have a Mastodon bot account and have your secret token, as 
 -   `npm run setup` will create needed folders
 -   `cp .env.example .env` will copy [.env.example](.env.example) to [.env](.env) file
 -   `nano .env` or use text editor to edit [.env](.env) file and add your credentials
--   `nano config.json` or use text editor to edit [config.json](config.json) file - **IMPORTANT** Your bot will toot about all of my blog posts if you do not edit this!
+-   `nano config.json` or use text editor to edit [config.json](config.json) file
+    -   **IMPORTANT** Your bot will toot about all of my blog posts if you do not edit this!
+    -   I **STRONGLY** recommend running `npm run ingest-feeds` after adding a new RSS feed, or else it will toot about each new one it finds. There is no mechanism to modulate number or tempo, it will just spit them out! Ingesting the feed will add all existing items to local file memory, and check against that file for new items in the loop.
 
 ### .env
 

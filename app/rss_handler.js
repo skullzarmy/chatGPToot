@@ -3,6 +3,7 @@ const axios = require("axios");
 const xml2js = require("xml2js");
 const fs = require("fs");
 const path = require("path");
+const config = require("../config.json");
 
 const JSON_FILE = path.join(__dirname, "..", "logs", "rss_feed_log.json");
 
@@ -77,6 +78,22 @@ class rssHandler {
         this.trackItem(guid);
         this.saveTrackedItems();
     }
+}
+
+async function ingestFeeds(urls) {
+    const handler = new rssHandler(urls);
+    const items = await handler.checkNewItems();
+
+    for (const item of items) {
+        const guid = item.guid[0];
+        console.log(`Ingesting item: ${item.title[0]} (${guid})`);
+        handler.logItem(guid);
+    }
+}
+
+if (require.main === module) {
+    const rssUrls = config.rss_urls;
+    ingestFeeds(rssUrls);
 }
 
 module.exports = { rssHandler };
