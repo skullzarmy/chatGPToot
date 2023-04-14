@@ -16,7 +16,37 @@
 
 ---
 
-[🤖 Mastodon Mention Commands 🤖](#mention-commands-) | [⚖️ License ⚖️](#license-%EF%B8%8F) |
+| [🤖 - Mastodon Mention Commands - 🤖](#mention-commands-) | [⚖️ - License - ⚖️](#license-%EF%B8%8F) | [🆕 - Updates - 🆕](#updates) |
+
+---
+
+## Stats
+
+![Lines of Code](https://img.shields.io/tokei/lines/github/skullzarmy/ChatGPToot)
+![Repo Size](https://img.shields.io/github/repo-size/skullzarmy/ChatGPToot)
+![File Count](https://img.shields.io/github/directory-file-count/skullzarmy/ChatGPToot)
+
+---
+
+## Dependencies
+
+### Bot
+
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/axios)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/bottleneck)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/date-fns)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/dotenv-safe)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/moment-timezone)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/node-cron)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/redis)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/openai)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/xml2js)
+
+### Status Server
+
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/express)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/express-rate-limit)
+![GitHub package.json dependency version (prod)](https://img.shields.io/github/package-json/dependency-version/skullzarmy/ChatGPToot/helmet)
 
 ## Installation
 
@@ -25,14 +55,37 @@ _assumes you already have a Mastodon bot account and have your secret token, as 
 -   Clone the repository: `git clone https://github.com/skullzarmy/chatGPToot.git`
 -   `npm install` to initiate node and install dependencies
 -   `npm run setup` will create needed folders
--   `cp .env.example .env` will copy `.env.example` to `.env` file
--   `nano .env` or use text editor to edit `.env` file and add your credentials
+-   `cp .env.example .env` will copy [.env.example](.env.example) to [.env](.env) file
+-   `nano .env` or use text editor to edit [.env](.env) file and add your credentials
+-   `nano config.json` or use text editor to edit [config.json](config.json) file - **IMPORTANT** Your bot will toot about all of my blog posts if you do not edit this!
+
+### .env
+
+```bash
+MASTODON_ACCESS_TOKEN=GET-FROM-MASTODON
+MASTODON_API_URL=YOUR-MASTODON-INSTANCE
+OPENAI_KEY=sk-...
+MASTODON_ACCOUNT_ID=GET-FROM-MASTODON
+MASTODON_ADMIN_ACCOUNT=TO-ENABLE-ADMIN-COMMANDS
+MASTODON_ADMIN_ALERT_USERNAME=TO-ALERT-FOR-FEEDBACK
+NEWSDATA_API_KEY=SET-UP-A-FREE-KEY-TO-GET-NEWS-DATA
+#STATUS_API_TOKEN=GENERATE-NEW-PRIVATE-KEY-TO-AUTH-STATUS-REQUESTS
+```
+
+### config.json
+
+```json
+{
+    "rss_urls": ["http://YOUR-RSS-FEED-URL/rss"],
+    ...
+}
+```
 
 ([top](#description))
 
 ## Arguments
 
-### The following arguments are available for `chatgptoot.js`:
+### The following arguments are available for [app/chatgptoot.js](app/chatgptoot.js):
 
 `--no-loop` - Disables the automatic toot, image, and mention loops. This is useful if you want to run the script manually to test it.
 
@@ -42,7 +95,7 @@ _assumes you already have a Mastodon bot account and have your secret token, as 
 
 `--no-mention` - Disables the automatic mention loop.
 
-`--no-rss` - Disabled the RSS checker loop.
+`--no-rss` - Disables the RSS checker loop.
 
 `--toot-now` - Generates a toot and posts it immediately.
 
@@ -68,7 +121,7 @@ _assumes you already have a Mastodon bot account and have your secret token, as 
 
 `npm run tail-logs` will stream the new bot logs to your terminal.
 
-`npm run usage` will generate a usage report located in `reports/`
+`npm run usage` will generate a usage report located in [reports/](reports/)
 
 ([top](#description))
 
@@ -108,7 +161,7 @@ _command must be at the beginning of the mention (after the @mention)_
 
 By default, the bot will log all usage to logs/usage_logs.json
 
-`npm run usage` will print and save a usage summary to `reports/`
+`npm run usage` will print and save a usage summary to [reports/](reports/)
 
 ([top](#description))
 
@@ -116,7 +169,7 @@ By default, the bot will log all usage to logs/usage_logs.json
 
 Bot can now subscribe to RSS feeds, track previously known items, and generate toots about newly found items in the feed.
 
-Modify the `config.json` file and add any number of RSS feeds to follow. Be careful! It will auto-post all newly found items without any care in the world about spamming everyone!
+Modify the [config.json](config.json) file and add any number of RSS feeds to follow. Be careful! It will auto-post all newly found items without any care in the world about spamming everyone!
 
 ## License ⚖️
 
@@ -148,5 +201,17 @@ Some function names are in camelCase (e.g., handleImageCommand), while others us
 
 -   Implement redis for persistent bottleneck rate limiting
 -   Implement fs/promise in chatgptoot.js (download image broke)
+-   Consider restricting news injection in toot generation to specific times so toots are not always news related.
+
+([top](#description))
+
+## Updates
+
+-   2023-04-13
+    -   Removed dependency for deprecated `requests` package. This required refactoring the `node-mastodon` package, which has been abandoned. I removed the dependency on this package and added [modules/tusk/](modules/tusk/) which is largely the same code, refactored to use axios and utilize the vanilla js Promise functionality. Dependabot can leave me alone about it now.
+    -   Setup an express server that serves a status JSON object. It checks my blog site and the bot node process and returns current status messages for both.
+    -   Added RSS feed subscription. Define RSS URLs in [config.json](config.json)
+    -   Bot account was suspended, so I moved to a new account on [@botsin.space](https://botsin.space). Bot is renamed Mr. Roboto (@mrroboto). I have decided **not** to change the repo name. Botsin.space does not enable the `trending/tags` API endpoint, which was used in `addContext()`, so I commented out the `getTrendingTags()` call but left it in place for running on instances that do support it. I may go to the trouble of setting up a separate account on another instance **just** to get trending tag data, but I highly doubt it.
+    -   Instead of trending tags, I added a news checker [app/news_handler.js](app/news_handler.js) which will return the latest news. `addContext()` is making use of this now to enrich the chat completion's context. I have noticed it is more heavily weighing the output than I would like, so I may consider putting some trigger variable into the function invocation to control weather I want the news added or not. Then set some mechanism for deciding which of the scheduled toots will be news related. Maybe I will setup a whole separate loop for it.
 
 ([top](#description))
