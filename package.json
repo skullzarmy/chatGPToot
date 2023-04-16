@@ -13,6 +13,7 @@
         "single-image": "node app/chatgptoot.js --no-loop --no-mention --no-toot --image-now",
         "single-mention": "node app/chatgptoot.js --no-loop --no-toot --no-image",
         "tail-logs": "tail -f logs/bot-log.log",
+        "bot-tail": "npm run bot && npm run tail-logs",
         "usage": "node app/usage_log_summary.js",
         "status-server-local": "nohup node app/status_http_server.js >> logs/local-status-log.log 2>&1 &",
         "status-server-ngrok": "nohup ngrok http 3000 >> logs/ngrok-log.log 2>&1 &",

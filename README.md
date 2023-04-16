@@ -20,7 +20,7 @@
 
 ---
 
-| [🤖 - Mastodon Mention Commands - 🤖](#mention-commands-) | [⚖️ - License - ⚖️](#license-%EF%B8%8F) | [🆕 - Updates - 🆕](#updates) |
+| [🆕 - **Updates** - 🆕](#updates) | [🤖 - Mastodon Mention Commands - 🤖](#mention-commands) | [✳️ - Dependencies - ✳️](#dependencies) | [💾 - Installation - 💾](#installation) | [⚖️ - License - ⚖️](#license) |
 
 ---
 
@@ -109,9 +109,11 @@ NEWSDATA_API_KEY=SET-UP-A-FREE-KEY-TO-GET-NEWS-DATA
 
 ([top](#description))
 
-## Example Usage
+## NPM Scripts
 
-`npm run bot` will run the bot in a loop, tooting, mentioning, and posting images.
+`npm run bot` will run the bot in `nohup` a loop, tooting, mentioning, and posting images.
+
+`npm run bot-tail` will run the bot as above and stream the logs to your terminal (by tailing the log file)
 
 `npm run bot-mention` will run the bot in a loop, mentioning but not tooting or posting images.
 
@@ -129,9 +131,18 @@ NEWSDATA_API_KEY=SET-UP-A-FREE-KEY-TO-GET-NEWS-DATA
 
 `npm run usage` will generate a usage report located in [reports/](reports/)
 
+`npm run status-server` will start an express server on port 3000 & ngrok tunnel. Config in [app/status_http_server.js](./app/status_http_server.js)
+
+-   Need to configure `ngrok config auth-token ...` from ngrok.
+-   _I plan to make this more modular and move config to [config.js](./config.js) eventually_
+
+`npm run ingest-feeds` will loop through your RSS feeds and ingest the existing items into a local file so they are not considered 'new'.
+
+-   **HIGHLY RECOMMENDED THE FIRST TIME YOU ADD A NEW RSS FEED**
+
 ([top](#description))
 
-## Mention Commands 🤖
+## Mention Commands
 
 The bot supports the following commands when responding to a mention:
 
@@ -177,31 +188,9 @@ Bot can now subscribe to RSS feeds, track previously known items, and generate t
 
 Modify the [config.json](config.json) file and add any number of RSS feeds to follow. Be careful! It will auto-post all newly found items without any care in the world about spamming everyone!
 
-## License ⚖️
-
-This project is released under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the source code, subject to the terms and conditions of the license.
-
-The [MIT License](LICENSE.txt) is a permissive open-source software license that allows you to use this project for any purpose, including commercial use. By using this project, you agree to retain the original copyright notice and the full license text in all copies or substantial portions of the software.
-
-We encourage collaboration and contribution to the project. Feel free to fork, modify, and share your improvements with the community. Our goal is to make this software as useful and accessible as possible, and your contributions will help us achieve that.
-
-Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
-
-<a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
-
-([top](#description))
-
----
-
----
-
 ## GPT-4 Suggested Improvements
 
-Overall, the script looks well-structured and functional. However, I found a few improvements and potential issues that should be addressed:
-
-### Function naming consistency:
-
-Some function names are in camelCase (e.g., handleImageCommand), while others use underscores (e.g., logUsage). It's best to maintain consistency in naming conventions.
+[COMPLETED]
 
 ## To Do
 
@@ -219,5 +208,26 @@ Some function names are in camelCase (e.g., handleImageCommand), while others us
     -   Added RSS feed subscription. Define RSS URLs in [config.json](config.json)
     -   Bot account was suspended, so I moved to a new account on [@botsin.space](https://botsin.space). Bot is renamed Mr. Roboto (@mrroboto). I have decided **not** to change the repo name. Botsin.space does not enable the `trending/tags` API endpoint, which was used in `addContext()`, so I commented out the `getTrendingTags()` call but left it in place for running on instances that do support it. I may go to the trouble of setting up a separate account on another instance **just** to get trending tag data, but I highly doubt it.
     -   Instead of trending tags, I added a news checker [app/news_handler.js](app/news_handler.js) which will return the latest news. `addContext()` is making use of this now to enrich the chat completion's context. I have noticed it is more heavily weighing the output than I would like, so I may consider putting some trigger variable into the function invocation to control weather I want the news added or not. Then set some mechanism for deciding which of the scheduled toots will be news related. Maybe I will setup a whole separate loop for it.
+-   2023-04-16
+    -   Cleaned up the README.md. Added `npm run bot-tail` command and added docs for the server and ingest commands.
+    -   Slava Ukraini
+
+([top](#description))
+
+---
+
+---
+
+## License
+
+This project is released under the [MIT License](LICENSE.txt). You are free to use, modify, and distribute the source code, subject to the terms and conditions of the license.
+
+The [MIT License](LICENSE.txt) is a permissive open-source software license that allows you to use this project for any purpose, including commercial use. By using this project, you agree to retain the original copyright notice and the full license text in all copies or substantial portions of the software.
+
+We encourage collaboration and contribution to the project. Feel free to fork, modify, and share your improvements with the community. Our goal is to make this software as useful and accessible as possible, and your contributions will help us achieve that.
+
+Please note that this project is provided "as is" without any warranty or liability. The authors are not responsible for any consequences that may arise from the use of this software.
+
+<a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
 
 ([top](#description))
