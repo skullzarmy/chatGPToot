@@ -195,6 +195,9 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
 ## To Do
 
 -   Implement redis for persistent bottleneck rate limiting
+-   Consider persistent memory, DB, etc. for long-term storage of settings.
+-   Subscribe feature - Users can subscribe to various toot types to be sent on a dynamic interval. e.g. Make me an image of a penguin every morning.
+    -   Should have persistent memory
 -   Implement fs/promise in chatgptoot.js (download image broke)
 -   Consider restricting news injection in toot generation to specific times so toots are not always news related.
 
