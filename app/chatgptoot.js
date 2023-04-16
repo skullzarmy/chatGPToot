@@ -99,7 +99,7 @@ async function addContext(msgs) {
     }
     msgs.push(systemMessage);
     msgs.push(...newsMsg);
-    msgs.push(news_disclaimer);
+    msgs.push(news_disclaimer.slice()[0]);
 }
 
 async function postToot(status, visibility, in_reply_to_id) {
