@@ -14,7 +14,8 @@ const rss_urls = config.rss_urls;
 const rss = new rssHandler(rss_urls);
 const newsChecker = new newsHandler();
 const example_image_prompts = config.example_image_prompts;
-const messages = config.messages;
+const mention_prompt = config.prompts.mention_prompt;
+const news_disclaimer = config.prompts.news_disclaimer;
 const { openai, initMastodon, rateLimiterGroup } = require("./init");
 let mastodon;
 
@@ -85,7 +86,7 @@ async function addContext(msgs) {
     const newsMsg = [
         {
             role: "system",
-            content: "Adding context: Listing latest AI and LLM news headlines",
+            content: "Adding context: Latest AI and LLM news headlines",
         },
     ];
 
@@ -98,6 +99,7 @@ async function addContext(msgs) {
     }
     msgs.push(systemMessage);
     msgs.push(...newsMsg);
+    msgs.push(news_disclaimer);
 }
 
 async function postToot(status, visibility, in_reply_to_id) {
@@ -560,7 +562,7 @@ async function handleStatusCommand(mention) {
 
 async function handleRegularMention(mention) {
     try {
-        let conversation = messages.slice();
+        let conversation = mention_prompt.slice();
         await fetchConversation(mention.status.id, conversation);
 
         const systemMessage = {
