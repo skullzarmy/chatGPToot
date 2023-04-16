@@ -1,3 +1,5 @@
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://stand-with-ukraine.pp.ua)
+
 # chatGPToot 🦣 -- Mastodon OpenAI Chatbot 🤖
 
 ![GitHub issues](https://img.shields.io/github/issues-raw/skullzarmy/chatGPToot)
@@ -11,6 +13,8 @@
 
 ![Mastodon Follow](https://img.shields.io/mastodon/follow/110178159113810309?domain=https%3A%2F%2Fbotsin.space&style=social)
 ![Mastodon Follow](https://img.shields.io/mastodon/follow/109988942401723597?domain=https%3A%2F%2Fmastodon.social&style=social)
+
+[![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/badges/StandWithUkraine.svg)](https://stand-with-ukraine.pp.ua)
 
 <a href="https://www.buymeacoffee.com/skllzrmy"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a beer&emoji=🍺&slug=skllzrmy&button_colour=FFDD00&font_colour=000000&font_family=Cookie&outline_colour=000000&coffee_colour=ffffff" /></a>
 
