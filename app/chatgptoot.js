@@ -45,26 +45,6 @@ async function downloadImage(url, dest) {
     }
 }
 
-async function shortenUrl(longUrl) {
-    const url = "https://gotiny.cc/api";
-    const data = { input: longUrl };
-
-    console.log(`Shortening URL: ${longUrl}`);
-
-    try {
-        const response = await axios.post(url, data, {
-            headers: { "Content-Type": "application/json" },
-        });
-
-        const json = response.data;
-        const shortUrl = `https://gotiny.cc/${json[0].code}`;
-        return shortUrl;
-    } catch (error) {
-        console.error(`Error shortening URL: ${longUrl}. Using original URL instead.`);
-        return longUrl;
-    }
-}
-
 async function addContext(msgs) {
     // const topTags = await getTrendingTags();
     const date = new Date();
@@ -91,10 +71,9 @@ async function addContext(msgs) {
     ];
 
     for (const item of news) {
-        const shortLink = await shortenUrl(item.link);
         newsMsg.push({
             role: "system",
-            content: `${item.title} - ${item.description} - ${item.pubDate} - ${shortLink}`,
+            content: `${item.title} - ${item.description} - ${item.pubDate} - ${item.link}`,
         });
     }
     msgs.push(systemMessage);
@@ -483,11 +462,10 @@ async function handleNewsCommand(mention) {
         ];
 
         for (const item of news) {
-            const shortUrl = await shortenUrl(item.link);
             msg.push(
                 {
                     role: "system",
-                    content: `${item.title} - ${item.description} - ${item.pubDate} - ${shortUrl}`,
+                    content: `${item.title} - ${item.description} - ${item.pubDate} - ${item.link}`,
                 },
                 {
                     role: "system",
