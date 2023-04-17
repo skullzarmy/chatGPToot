@@ -215,6 +215,8 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
 -   2023-04-16
     -   Cleaned up the README.md. Added `npm run bot-tail` command and added docs for the server and ingest commands.
     -   Slava Ukraini
+-   2023-04-17
+    -   Added alt text to image posts for a11y
 
 ([top](#description))
 
