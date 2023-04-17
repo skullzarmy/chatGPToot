@@ -24,6 +24,6 @@ media/*
 # Log folder contents
 logs/*
 # report folder contents
-report/*
+reports/*
 # feedback folder contents
 feedback/*
