@@ -194,11 +194,12 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
 
 ## To Do
 
--   Implement redis for persistent bottleneck rate limiting
+-   Just realized that for some reason user ID will change from time in the Mastodon responses, leading to a single user logging under multiple IDs. I will have to probably just log under username instead to avoid this. For now, usage logging is somewhat broken.
+-   Implement redis for persistent bottleneck rate limiting.
 -   Consider persistent memory, DB, etc. for long-term storage of settings.
 -   Subscribe feature - Users can subscribe to various toot types to be sent on a dynamic interval. e.g. Make me an image of a penguin every morning.
-    -   Should have persistent memory
--   Implement fs/promise in chatgptoot.js (download image broke)
+    -   Should have persistent memory.
+-   Implement fs/promise in chatgptoot.js (download image broke).
 -   Consider restricting news injection in toot generation to specific times so toots are not always news related.
 
 ([top](#description))

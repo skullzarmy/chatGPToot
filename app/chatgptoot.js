@@ -353,6 +353,7 @@ async function handleImageCommand(mention, prompt) {
 
         const mediaResponse = await mastodon.post("media", {
             file: fs.createReadStream(filepath),
+            description: prompt,
         });
 
         const mediaId = mediaResponse.data.id;
