@@ -9,6 +9,7 @@
 
 ### This is a Mastodon chatbot that uses OpenAI to generate responses. The bot can post toots and DALL-E images based on a pre-written prompt or respond to direct mentions.
 
+[![made with hearth by skullzarmy](https://img.shields.io/badge/made%20with%20%E2%99%A5%20by-skullzarmy-ff1515.svg)](https://github.com/skullzarmy)
 ![Custom badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fsocaltechlab.com%2F.netlify%2Ffunctions%2FgithubProxy)
 
 ![Mastodon Follow](https://img.shields.io/mastodon/follow/110178159113810309?domain=https%3A%2F%2Fbotsin.space&style=social)
@@ -217,6 +218,8 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
     -   Slava Ukraini
 -   2023-04-17
     -   Added alt text to image posts for a11y
+-   2023-04-18
+    -   Moved `modules/tusk` to new npm package at [https://www.npmjs.com/package/tusk-mastodon](https://www.npmjs.com/package/tusk-mastodon) and moved to npm install.
 
 ([top](#description))
 
