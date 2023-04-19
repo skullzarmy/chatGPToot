@@ -1,6 +1,5 @@
 const { Configuration, OpenAIApi } = require("openai");
-const path = require("path");
-const M = require(path.join(__dirname, "..", "/modules/tusk/mastodon"));
+const T = require("tusk-mastodon");
 const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
 const { Group } = require("bottleneck");
@@ -11,7 +10,7 @@ const openai = new OpenAIApi(configuration);
 function initMastodon(isDevMode) {
     let mastodon;
     if (!isDevMode) {
-        mastodon = new M({
+        mastodon = new T({
             access_token: process.env.MASTODON_ACCESS_TOKEN,
             api_url: process.env.MASTODON_API_URL,
         });
