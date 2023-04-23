@@ -656,7 +656,7 @@ async function handleTootNowCommand(mention, prompt) {
             );
         } else {
             const genToot = await generateToot(prompt);
-            await postToot(genToot, "public", null, mention.account.acct);
+            await postToot(genToot, "public", null, false);
         }
     } catch (error) {
         console.error(`Toot Now Error: ${error}`);
