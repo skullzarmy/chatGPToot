@@ -358,7 +358,7 @@ async function handleImageCommand(mention, prompt, isFollowing = false) {
                 description: prompt,
             });
 
-            const tootVis = mention.status.visibility || "public";
+            const tootVis = mention ? mention.status.visibility : false || "public";
 
             const mediaId = mediaResponse.data.id;
             let tootText;
@@ -400,7 +400,7 @@ async function handleImageCommand(mention, prompt, isFollowing = false) {
     } else {
         console.log("Not following user.");
         const reply = `${mention.account.acct} I'm sorry, I'm not following you. This command is currently only available to users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7`;
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         postToot(reply, tootVis, mention.status.id).catch((error) => console.error(error));
     }
 }
@@ -425,7 +425,7 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
                 description: newPrompt,
             });
 
-            const tootVis = mention.status.visibility || "public";
+            const tootVis = mention ? mention.status.visibility : false || "public";
 
             const mediaId = mediaResponse.data.id;
             let tootText;
@@ -468,7 +468,7 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
     } else {
         console.log("Not following user.");
         const reply = `${mention.account.acct} I'm sorry, I'm not following you. This command is currently only available to users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7`;
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         postToot(reply, tootVis, mention.status.id).catch((error) => console.error(error));
     }
 }
@@ -507,7 +507,7 @@ async function handleNewsCommand(mention) {
         }
 
         const reply = `@${mention.account.acct} ${summaries.join("\n\n")}`;
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         postToot(reply, tootVis, mention.status.id, mention.account.acct).catch((error) => console.error(error));
         logUsage(mention.account.acct, mention.status.id, "news", "unknown", "news");
     } catch (error) {
@@ -518,7 +518,7 @@ async function handleNewsCommand(mention) {
 
 async function handleHelpCommand(mention) {
     try {
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         await postToot(
             `Hello, @${mention.account.acct} First and foremost, I am a chatbot fueled by Large Language Models and AI APIs. You can just chat with me and I will respond intelligently (I hope).\nI can also respond to the following commands if you start your mention with them:\nFOLLOWER ONLY - //image// and //image-assist//\nOPEN TO ALL - //news//, //help//, //commands//, //beta-application//, and //feedback//\nExample: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information on my commands and what they can do.`,
             tootVis,
@@ -531,7 +531,7 @@ async function handleHelpCommand(mention) {
 }
 
 async function handleBetaApplicationCommand(mention, isFollowing = false) {
-    const tootVis = mention.status.visibility || "public";
+    const tootVis = mention ? mention.status.visibility : false || "public";
     if (isFollowing) {
         try {
             await postToot(
@@ -560,7 +560,7 @@ async function handleBetaApplicationCommand(mention, isFollowing = false) {
 async function handleStatusCommand(mention) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         if (!is_admin) {
             await postToot(
                 `Hello, @${mention.account.acct} You are not authorized to use this command.`,
@@ -599,7 +599,7 @@ async function handleRegularMention(mention) {
         });
 
         let reply = response.data.choices[0].message.content;
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         if (tootVis == "direct") {
             reply = `@${mention.account.acct} ${reply}`;
         }
@@ -623,7 +623,7 @@ async function handleRegularMention(mention) {
 async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
     try {
         logFeedback(mention.account.id, mention.status.id, prompt);
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         await postToot(
             `Thank you for your feedback, @${mention.account.acct}! I have logged it and will use it to improve the bot.`,
             tootVis,
@@ -646,7 +646,7 @@ async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
 async function handleTootNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         console.log("is_admin:", is_admin);
         if (!is_admin) {
             await postToot(
@@ -667,7 +667,7 @@ async function handleTootNowCommand(mention, prompt) {
 async function handleImageNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
-        const tootVis = mention.status.visibility || "public";
+        const tootVis = mention ? mention.status.visibility : false || "public";
         if (!is_admin) {
             await postToot(
                 `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
@@ -716,7 +716,7 @@ async function handleRssLoop() {
 
 async function handleLimitReached(mention) {
     await dismissNotification(mention.id);
-    const tootVis = mention.status.visibility || "public";
+    const tootVis = mention ? mention.status.visibility : false || "public";
     await postToot(
         `Sorry, @${mention.account.acct} you have reached the maximum number of mentions per hour. Please try again later.`,
         tootVis,
