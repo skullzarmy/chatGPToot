@@ -81,7 +81,7 @@ async function addContext(msgs) {
     msgs.push(news_disclaimer.slice()[0]);
 }
 
-async function postToot(status, visibility, in_reply_to_id) {
+async function postToot(status, visibility, in_reply_to_id, account = false) {
     const maxChars = 490;
 
     if (status.length > 500) {
@@ -106,7 +106,9 @@ async function postToot(status, visibility, in_reply_to_id) {
         for (const tootText of tootTexts) {
             try {
                 const params = {
-                    status: `${tootText} [${tootCount}/${totalToots}]`,
+                    status: `${
+                        account && tootCount > 1 ? "@" + account + " cont. " : ""
+                    }${tootText} [${tootCount}/${totalToots}]`,
                     visibility,
                     ...(in_reply_to_id ? { in_reply_to_id } : {}),
                 };
@@ -177,7 +179,7 @@ async function getStatus() {
     try {
         const date = new Date();
         const countfeedback = await countFeedback();
-        // const trends = await getTrendingTags();
+        // const trends = await getTrendingTags(); // botsin.space does not support this endpoint
 
         const prompt = "This is a test. Plese reply with a pleasant message.";
         const response = await openai.createCompletion({
@@ -217,7 +219,6 @@ async function getTrendingTags() {
     const tags = response.data.map((tag) => tag.name);
     // return tags;
     return false;
-    // disabled because botsin.space api disabled trending tags data
 }
 
 async function fetchConversation(statusId, messages = [], tokens = 0) {
@@ -256,8 +257,11 @@ async function checkMentions() {
             for (const mention of notifications.data) {
                 const userId = mention.account.id;
                 const rateLimiter = rateLimiterGroup.key(userId);
-
-                rateLimiter.schedule(() => processMention(mention, following));
+                try {
+                    rateLimiter.schedule(() => processMention(mention, following));
+                } catch (error) {
+                    handleLimitReached(mention);
+                }
             }
         }
     } catch (error) {
@@ -273,10 +277,9 @@ async function checkMentions() {
 //
 
 async function processMention(mention, following) {
-    await dismissNotification(mention.id);
-    const isFollowing = following.some((followed) => followed.id === mention.account.id);
-
-    if (isFollowing) {
+    try {
+        await dismissNotification(mention.id);
+        const isFollowing = following.some((followed) => followed.id === mention.account.id);
         const content = mention.status.content
             .replace(/<[^>]*>?/gm, "")
             .replace("@mrroboto", "")
@@ -297,11 +300,11 @@ async function processMention(mention, following) {
             case "//img//":
             case "//imege//":
             case "//image//":
-                handleImageCommand(mention, prompt).catch((error) => console.error(error));
+                handleImageCommand(mention, prompt, isFollowing).catch((error) => console.error(error));
                 break;
             case "//img-asst//":
             case "//image-assist//":
-                handleImageAssistCommand(mention, prompt).catch((error) => console.error(error));
+                handleImageAssistCommand(mention, prompt, isFollowing).catch((error) => console.error(error));
                 break;
             case "//news//":
                 handleNewsCommand(mention).catch((error) => console.error(error));
@@ -312,11 +315,11 @@ async function processMention(mention, following) {
                 break;
             case "//comment//":
             case "//feedback//":
-                handleFeedbackCommand(mention, prompt).catch((error) => console.error(error));
+                handleFeedbackCommand(mention, prompt, isFollowing).catch((error) => console.error(error));
                 break;
             case "//beta//":
             case "//beta-application//":
-                handleBetaApplicationCommand(mention).catch((error) => console.error(error));
+                handleBetaApplicationCommand(mention, isFollowing).catch((error) => console.error(error));
                 break;
             case "//toot-now//":
                 handleTootNowCommand(mention, prompt).catch((error) => console.error(error));
@@ -331,124 +334,142 @@ async function processMention(mention, following) {
                 handleRegularMention(mention).catch((error) => console.error(error));
                 break;
         }
+    } catch (error) {
+        console.error("Error processing mention:", error);
+        throw error;
+    }
+}
+
+async function handleImageCommand(mention, prompt, isFollowing = false) {
+    if (isFollowing) {
+        try {
+            const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
+            const imageUrl = response.data.data[0].url;
+            const tokens = "unknown";
+
+            const filename = `new_toot_${Date.now()}.png`;
+            const filepath = path.join(__dirname, "..", "media", filename);
+
+            await downloadImage(imageUrl, filepath);
+            console.log("Image downloaded to " + filepath);
+
+            const mediaResponse = await mastodon.post("media", {
+                file: fs.createReadStream(filepath),
+                description: prompt,
+            });
+
+            const tootVis = mention.status.visibility || "public";
+
+            const mediaId = mediaResponse.data.id;
+            let tootText;
+            let tootParams = {
+                media_ids: [mediaId],
+                visibility: tootVis,
+            };
+
+            if (mention) {
+                tootText = `@${mention.account.acct} Image prompt: ${prompt.substring(
+                    0,
+                    484 - mention.account.username.length
+                )}`;
+                tootParams.status = tootText;
+                tootParams.in_reply_to_id = mention.status.id;
+
+                logUsage(mention.account.acct, mention.status.id, prompt, tokens, "image");
+            } else {
+                tootText = `Image prompt: ${prompt.substring(0, 486)}`;
+                tootParams.status = tootText;
+
+                logUsage("mrroboto", null, "generate image", tokens, "image");
+            }
+
+            const tootResponse = await mastodon.post("statuses", tootParams);
+            console.log("Toot with image posted:", tootResponse.data.uri);
+
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                } else {
+                    console.log("File deleted:", filepath);
+                }
+            });
+        } catch (error) {
+            console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
+            throw error;
+        }
     } else {
         console.log("Not following user.");
-        const reply =
-            "I'm sorry, I'm not following you. I am only responding to mentions from users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7";
-        postToot(reply, "public", mention.status.id).catch((error) => console.error(error));
+        const reply = `${mention.account.acct} I'm sorry, I'm not following you. This command is currently only available to users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7`;
+        const tootVis = mention.status.visibility || "public";
+        postToot(reply, tootVis, mention.status.id).catch((error) => console.error(error));
     }
 }
 
-async function handleImageCommand(mention, prompt) {
-    try {
-        const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
-        const imageUrl = response.data.data[0].url;
-        const tokens = "unknown";
+async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
+    if (isFollowing) {
+        try {
+            const newPrompt = await generateImagePrompt(prompt);
 
-        const filename = `new_toot_${Date.now()}.png`;
-        const filepath = path.join(__dirname, "..", "media", filename);
+            const response = await openai.createImage({ prompt: newPrompt, n: 1, size: "512x512" });
+            const imageUrl = response.data.data[0].url;
+            const tokens = "unknown";
 
-        await downloadImage(imageUrl, filepath);
-        console.log("Image downloaded to " + filepath);
+            const filename = `new_toot_${Date.now()}.png`;
+            const filepath = path.join(__dirname, "..", "media", filename);
 
-        const mediaResponse = await mastodon.post("media", {
-            file: fs.createReadStream(filepath),
-            description: prompt,
-        });
+            await downloadImage(imageUrl, filepath);
+            console.log("Image downloaded to " + filepath);
 
-        const mediaId = mediaResponse.data.id;
-        let tootText;
-        let tootParams = {
-            media_ids: [mediaId],
-            visibility: "public",
-        };
+            const mediaResponse = await mastodon.post("media", {
+                file: fs.createReadStream(filepath),
+                description: newPrompt,
+            });
 
-        if (mention) {
-            tootText = `@${mention.account.acct} Image prompt: ${prompt.substring(
-                0,
-                484 - mention.account.username.length
-            )}`;
-            tootParams.status = tootText;
-            tootParams.in_reply_to_id = mention.status.id;
+            const tootVis = mention.status.visibility || "public";
 
-            logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
-        } else {
-            tootText = `Image prompt: ${prompt.substring(0, 486)}`;
-            tootParams.status = tootText;
+            const mediaId = mediaResponse.data.id;
+            let tootText;
+            let tootParams = {
+                media_ids: [mediaId],
+                visibility: tootVis,
+            };
 
-            logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
-        }
+            if (mention) {
+                tootText = `@${mention.account.acct} Image prompt: ${newPrompt.substring(
+                    0,
+                    484 - mention.account.username.length
+                )}`;
+                tootParams.status = tootText;
+                tootParams.in_reply_to_id = mention.status.id;
+                tootParams.visibility = tootVis;
 
-        const tootResponse = await mastodon.post("statuses", tootParams);
-        console.log("Toot with image posted:", tootResponse.data.uri);
-
-        fs.unlink(filepath, (err) => {
-            if (err) {
-                console.error("Error deleting file:", err);
+                logUsage(mention.account.acct, mention.status.id, prompt, tokens, "image");
             } else {
-                console.log("File deleted:", filepath);
+                tootText = `Image prompt: ${newPrompt.substring(0, 486)}`;
+                tootParams.status = tootText;
+
+                logUsage("mrroboto", null, "generate image", tokens, "image");
             }
-        });
-    } catch (error) {
-        console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
-        throw error;
-    }
-}
 
-async function handleImageAssistCommand(mention, prompt) {
-    try {
-        const newPrompt = await generateImagePrompt(prompt);
+            const tootResponse = await mastodon.post("statuses", tootParams);
+            console.log("Toot with image posted:", tootResponse.data.uri);
 
-        const response = await openai.createImage({ prompt: newPrompt, n: 1, size: "512x512" });
-        const imageUrl = response.data.data[0].url;
-        const tokens = "unknown";
-
-        const filename = `new_toot_${Date.now()}.png`;
-        const filepath = path.join(__dirname, "..", "media", filename);
-
-        await downloadImage(imageUrl, filepath);
-        console.log("Image downloaded to " + filepath);
-
-        const mediaResponse = await mastodon.post("media", {
-            file: fs.createReadStream(filepath),
-        });
-
-        const mediaId = mediaResponse.data.id;
-        let tootText;
-        let tootParams = {
-            media_ids: [mediaId],
-            visibility: "public",
-        };
-
-        if (mention) {
-            tootText = `@${mention.account.acct} Image prompt: ${newPrompt.substring(
-                0,
-                484 - mention.account.username.length
-            )}`;
-            tootParams.status = tootText;
-            tootParams.in_reply_to_id = mention.status.id;
-
-            logUsage(mention.account.id, mention.status.id, prompt, tokens, "image");
-        } else {
-            tootText = `Image prompt: ${newPrompt.substring(0, 486)}`;
-            tootParams.status = tootText;
-
-            logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate image", tokens, "image");
+            fs.unlink(filepath, (err) => {
+                if (err) {
+                    console.error("Error deleting file:", err);
+                } else {
+                    console.log("File deleted:", filepath);
+                }
+            });
+        } catch (error) {
+            console.error(`Error in handleImageAssistCommand: ${JSON.stringify(error)}`);
+            throw error;
         }
-
-        const tootResponse = await mastodon.post("statuses", tootParams);
-        console.log("Toot with image posted:", tootResponse.data.uri);
-
-        fs.unlink(filepath, (err) => {
-            if (err) {
-                console.error("Error deleting file:", err);
-            } else {
-                console.log("File deleted:", filepath);
-            }
-        });
-    } catch (error) {
-        console.error(`Error in handleImageAssistCommand: ${JSON.stringify(error)}`);
-        throw error;
+    } else {
+        console.log("Not following user.");
+        const reply = `${mention.account.acct} I'm sorry, I'm not following you. This command is currently only available to users I am following. If you would like to help us test, you can apply at https://forms.gle/drpUrRnhwioXuiYU7`;
+        const tootVis = mention.status.visibility || "public";
+        postToot(reply, tootVis, mention.status.id).catch((error) => console.error(error));
     }
 }
 
@@ -458,10 +479,10 @@ async function handleNewsCommand(mention) {
         const msg = [
             {
                 role: "system",
-                content: "Listing latest news articles (limited to AI and LLM related content and only three articles)",
+                content: "Listing latest news article:",
             },
         ];
-
+        const summaries = [];
         for (const item of news) {
             msg.push(
                 {
@@ -470,24 +491,25 @@ async function handleNewsCommand(mention) {
                 },
                 {
                     role: "system",
-                    content: `${item.content}`,
+                    content: `${item.content.substring(0, 5000)}...`,
                 }
             );
+            msg.push({
+                role: "user",
+                content:
+                    "Please summarize the latest news article in one or two sentences. You can also add your own thoughts or opinions.",
+            });
+            const response = await openai.createChatCompletion({
+                model: "gpt-3.5-turbo",
+                messages: msg,
+            });
+            summaries.push(`${item.title}\n${response.data.choices[0].message.content}\n${item.link}`);
         }
 
-        msg.push({
-            role: "user",
-            content: "Please summarize the latest news articles for me",
-        });
-
-        const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
-            messages: msg,
-        });
-
-        const reply = `@${mention.account.acct} ${response.data.choices[0].message.content}`;
-        postToot(reply, "public", mention.status.id).catch((error) => console.error(error));
-        logUsage(mention.account.id, mention.status.id, "news", "unknown", "news");
+        const reply = `@${mention.account.acct} ${summaries.join("\n\n")}`;
+        const tootVis = mention.status.visibility || "public";
+        postToot(reply, tootVis, mention.status.id, mention.account.acct).catch((error) => console.error(error));
+        logUsage(mention.account.acct, mention.status.id, "news", "unknown", "news");
     } catch (error) {
         console.error(`Error in handleNewsCommand: ${JSON.stringify(error)}`);
         throw error;
@@ -496,9 +518,10 @@ async function handleNewsCommand(mention) {
 
 async function handleHelpCommand(mention) {
     try {
+        const tootVis = mention.status.visibility || "public";
         await postToot(
-            `Hello, @${mention.account.acct} I will respond to the following commands if you start your mention with them: //image//, //image-assist//, //news//, //help//, //commands//, //beta-application//, and //feedback//. Example: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information.`,
-            "public",
+            `Hello, @${mention.account.acct} First and foremost, I am a chatbot fueled by Large Language Models and AI APIs. You can just chat with me and I will respond intelligently (I hope).\nI can also respond to the following commands if you start your mention with them:\nFOLLOWER ONLY - //image// and //image-assist//\nOPEN TO ALL - //news//, //help//, //commands//, //beta-application//, and //feedback//\nExample: //image// a cat eating a taco\nPlease check my GitHub link on my profile for the most up-to-date information on my commands and what they can do.`,
+            tootVis,
             mention.status.id
         );
     } catch (error) {
@@ -507,31 +530,49 @@ async function handleHelpCommand(mention) {
     }
 }
 
-async function handleBetaApplicationCommand(mention) {
-    try {
-        await postToot(
-            `Hello, @${mention.account.acct} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
-            "public",
-            mention.status.id
-        );
-    } catch (error) {
-        console.error("Error handling beta application command:", error);
-        throw error;
+async function handleBetaApplicationCommand(mention, isFollowing = false) {
+    const tootVis = mention.status.visibility || "public";
+    if (isFollowing) {
+        try {
+            await postToot(
+                `Hello, @${mention.account.acct} I am already following you! Please try a 'follower only' command. If you have issues please use //feedback// to let me know.`,
+                tootVis,
+                mention.status.id
+            );
+        } catch (error) {
+            console.error("Error handling beta application command:", error);
+            throw error;
+        }
+    } else {
+        try {
+            await postToot(
+                `Hello, @${mention.account.acct} If you would like to help us test this bot, please apply at https://forms.gle/drpUrRnhwioXuiYU7.`,
+                tootVis,
+                mention.status.id
+            );
+        } catch (error) {
+            console.error("Error handling beta application command:", error);
+            throw error;
+        }
     }
 }
 
 async function handleStatusCommand(mention) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
+        const tootVis = mention.status.visibility || "public";
         if (!is_admin) {
             await postToot(
                 `Hello, @${mention.account.acct} You are not authorized to use this command.`,
-                "public",
+                tootVis,
                 mention.status.id
             );
         } else {
-            const status = await getStatus();
-            await postToot(status, "public", mention.status.id);
+            let status = await getStatus();
+            if (tootVis == "direct") {
+                status = `@${mention.account.acct} ${status}`;
+            }
+            await postToot(status, tootVis, mention.status.id);
         }
     } catch (error) {
         console.error("Error handling status command:", error);
@@ -557,8 +598,12 @@ async function handleRegularMention(mention) {
             messages: conversation,
         });
 
-        const reply = response.data.choices[0].message.content;
-        await postToot(reply, "public", mention.status.id);
+        let reply = response.data.choices[0].message.content;
+        const tootVis = mention.status.visibility || "public";
+        if (tootVis == "direct") {
+            reply = `@${mention.account.acct} ${reply}`;
+        }
+        await postToot(reply, tootVis, mention.status.id, mention.account.acct);
 
         // Find the last user message in the conversation
         const lastUserMessage = conversation
@@ -567,7 +612,7 @@ async function handleRegularMention(mention) {
             .find((message) => message.role === "user");
         if (lastUserMessage) {
             const tokens = response.data.choices[0].tokens;
-            logUsage(mention.account.id, mention.status.id, lastUserMessage.content, tokens, "chat");
+            logUsage(mention.account.acct, mention.status.id, lastUserMessage.content, tokens, "chat");
         }
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
@@ -575,19 +620,20 @@ async function handleRegularMention(mention) {
     }
 }
 
-async function handleFeedbackCommand(mention, prompt) {
+async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
     try {
         logFeedback(mention.account.id, mention.status.id, prompt);
+        const tootVis = mention.status.visibility || "public";
         await postToot(
             `Thank you for your feedback, @${mention.account.acct}! I have logged it and will use it to improve the bot.`,
-            "public",
+            tootVis,
             mention.status.id
         );
 
         if (process.env.MASTODON_ADMIN_ALERT_USERNAME) {
             await postToot(
-                `${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged.`,
-                "public",
+                `${process.env.MASTODON_ADMIN_ALERT_USERNAME} New feedback has been logged from user ${mention.account.acct}.\nIs follower: ${isFollowing}`,
+                "direct",
                 null
             );
         }
@@ -600,16 +646,17 @@ async function handleFeedbackCommand(mention, prompt) {
 async function handleTootNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
+        const tootVis = mention.status.visibility || "public";
         console.log("is_admin:", is_admin);
         if (!is_admin) {
             await postToot(
                 `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
-                "public",
+                tootVis,
                 mention.status.id
             );
         } else {
             const genToot = await generateToot(prompt);
-            await postToot(genToot, "public", null);
+            await postToot(genToot, "public", null, mention.account.acct);
         }
     } catch (error) {
         console.error(`Toot Now Error: ${error}`);
@@ -620,15 +667,16 @@ async function handleTootNowCommand(mention, prompt) {
 async function handleImageNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
+        const tootVis = mention.status.visibility || "public";
         if (!is_admin) {
             await postToot(
                 `Sorry, @${mention.account.acct} you are not authorized to use this command.`,
-                "public",
+                tootVis,
                 mention.status.id
             );
         } else {
             const genImage = await generateImagePrompt(prompt);
-            await handleImageCommand(null, genImage);
+            await handleImageCommand(null, genImage, true);
         }
     } catch (error) {
         console.error(`Image Now Error: ${error}`);
@@ -638,7 +686,7 @@ async function handleImageNowCommand(mention, prompt) {
 
 async function handleImageLoop() {
     const prompt = await generateImagePrompt();
-    handleImageCommand(null, prompt);
+    handleImageCommand(null, prompt, true);
     const now = moment().tz("America/Los_Angeles");
     console.log(`Image loop called at ${now.format()}`);
 }
@@ -664,6 +712,16 @@ async function handleRssLoop() {
         }
     }
     console.log(`${newItems.length} new RSS items processed at ${new Date()}`);
+}
+
+async function handleLimitReached(mention) {
+    await dismissNotification(mention.id);
+    const tootVis = mention.status.visibility || "public";
+    await postToot(
+        `Sorry, @${mention.account.acct} you have reached the maximum number of mentions per hour. Please try again later.`,
+        tootVis,
+        mention.status.id
+    );
 }
 
 //
@@ -779,7 +837,7 @@ async function generateToot(prompt = false, rss = false) {
         });
 
         const tokens = response.data.choices[0].message.tokens;
-        logUsage(process.env.MASTODON_ACCOUNT_ID, null, "generate toot", tokens, "chat");
+        logUsage("mrroboto", null, "generate toot", tokens, "chat");
 
         const toot = response.data.choices[0].message.content;
         if (toot.trim() === "") {
@@ -819,7 +877,7 @@ async function main() {
     if (!noLoop) {
         if (!noMention) {
             let mentionCronJob;
-            const mentionInterval = "*/15 * * * * *"; // Check mentions every 15 seconds
+            const mentionInterval = config.intervals.mentionInterval;
             mentionCronJob = cron.schedule(mentionInterval, () => {
                 checkMentions();
             });
@@ -827,7 +885,7 @@ async function main() {
 
         if (!noRss) {
             let rssCronJob;
-            const rssInterval = "*/15 * * * *"; // Check RSS every 15 minutes
+            const rssInterval = config.intervals.rssInterval;
             rssCronJob = cron.schedule(rssInterval, () => {
                 handleRssLoop();
             });
@@ -835,12 +893,7 @@ async function main() {
 
         if (!noImage) {
             let imageCronJobs = [];
-            const imageTimes = [
-                "0 9 * * *", // 9:00 AM Pacific local time
-                "5 12 * * *", // 12:05 PM Pacific local time
-                "0 16 * * *", // 4:00 PM Pacific local time
-                "5 21 * * *", // 9:05 PM Pacific local time
-            ];
+            const imageTimes = config.intervals.imageTimes;
             imageCronJobs = imageTimes.map((time) => {
                 return cron.schedule(time, handleImageLoop, {
                     timezone: "America/Los_Angeles",
@@ -850,12 +903,7 @@ async function main() {
 
         if (!noToot) {
             let tootCronJobs = [];
-            const tootTimes = [
-                "0 8 * * *", // 8:00 AM Pacific local time
-                "0 12 * * *", // 12:00 PM Pacific local time
-                "0 17 * * *", // 5:00 PM Pacific local time
-                "0 21 * * *", // 9:00 PM Pacific local time
-            ];
+            const tootTimes = config.intervals.tootTimes;
             tootCronJobs = tootTimes.map((time) => {
                 return cron.schedule(time, handleTootLoop, {
                     timezone: "America/Los_Angeles",

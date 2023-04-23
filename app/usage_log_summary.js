@@ -31,7 +31,7 @@ function getUserStats(user) {
     const earliest = new Date(Math.min(...user.interactions.map((interaction) => new Date(interaction.timestamp))));
     const latest = new Date(Math.max(...user.interactions.map((interaction) => new Date(interaction.timestamp))));
     return {
-        id: user.id,
+        name: user.name,
         count: user.interactions.length,
         chatCount: chats.length,
         imageCount: images.length,
@@ -61,9 +61,9 @@ async function generateStatsTable(startDate, endDate) {
 }
 
 async function generateCsv(stats, filename) {
-    let csv = "User ID,Total Logs,Chat Logs,Image Logs,Total Chat Tokens,Total Image Tokens,Earliest Log,Latest Log\n";
+    let csv = "Username,Total Logs,Chat Logs,Image Logs,Total Chat Tokens,Total Image Tokens,Earliest Log,Latest Log\n";
     stats.forEach((stat) => {
-        csv += `${stat.id},${stat.count},${stat.chatCount},${stat.imageCount},${stat.chatTokens},${
+        csv += `${stat.name},${stat.count},${stat.chatCount},${stat.imageCount},${stat.chatTokens},${
             stat.imageTokens
         },${format(stat.earliest, "yyyy-MM-dd HH:mm:ss")},${format(stat.latest, "yyyy-MM-dd HH:mm:ss")}\n`;
     });

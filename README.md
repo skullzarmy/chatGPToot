@@ -220,6 +220,18 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
     -   Added alt text to image posts for a11y
 -   2023-04-18
     -   Moved `modules/tusk` to new npm package at [https://www.npmjs.com/package/tusk-mastodon](https://www.npmjs.com/package/tusk-mastodon) and moved to npm install.
+-   2023-04-21
+    -   Moved timing of loops to `config.json` 'intervals[]'
+    -   Modified News disclaimer. Trying to get it to parse out the ads that come in on the free News API and not act as a marketing bot for large corps that pay for news distribution.
+-   2023-04-22
+    -   Improved usage logging - now logs under username rather than ID number.
+    -   Changes to support opening up some commands to all Mastodon accounts. Moving toward the potential for fully opening it up.
+        -   Modified the ratelimiter from 50 per day to 5 per hour per account, or a total of 120 per day if all tokens are used every hour. Obviously a bit dangerous as someone could easily run multiple accounts, but I am planning to keep a close eye on usage, and I have kept image gen to followed only.
+        -   Modified `processMention()` to pass the `isFollower` variable into the handler functions where needed. Removed the main IF isFollower check.
+        -   Modified various handler functions to check isFollower as needed and moved the denial responses there.
+    -   Big change to the '//news//' command. Will now loop each article, get a single summary, and stitch it all into a summarized response.
+    -   Bot now respects and responds in the visibility setting that was used in the mention. Will no longer reply publicly to a DM or unlisted toot.
+        -   Various modifications to reply formatting to ensure @s are used (especially in multi-toot replies) to ensure DM messages can all be seen by the intended recipient.
 
 ([top](#description))
 

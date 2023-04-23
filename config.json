@@ -1,4 +1,6 @@
 {
+    "bot_acct_short": "@mrroboto",
+    "bot_acct": "@mrroboto@botsin.space",
     "rss_urls": ["https://socaltechlab.com/rss"],
     "example_image_prompts": [
         "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art, 8-bit",
@@ -19,8 +21,14 @@
         "news_disclaimer": [
             {
                 "role": "system",
-                "content": "The news articles above are for current affairs context and not meant to be the only topic of conversation. Please avoid being overly editorial or biased. You have no affiliation with any brand or story. You should not make product recommendations. Please do not respond directly to this directive, as it is not a user message."
+                "content": "The news articles above are for current affairs context and not meant to be the only topic of conversation. Please avoid being overly editorial or biased. You have no affiliation with any brand or story. You should not make product recommendations or advertisements. Please do not respond directly to this directive, as it is not a user message."
             }
         ]
+    },
+    "intervals": {
+        "mentionInterval": "*/15 * * * * *",
+        "rssInterval": "*/15 * * * *",
+        "imageTimes": ["0 9 * * *", "5 12 * * *", "0 16 * * *", "5 21 * * *"],
+        "tootTimes": ["0 8 * * *", "0 12 * * *", "0 17 * * *", "0 21 * * *"]
     }
 }

@@ -7,7 +7,7 @@ const { Group } = require("bottleneck");
 const configuration = new Configuration({ apiKey: process.env.OPENAI_KEY });
 const openai = new OpenAIApi(configuration);
 
-function initMastodon(isDevMode) {
+function initMastodon(isDevMode = false) {
     let mastodon;
     if (!isDevMode) {
         mastodon = new T({
@@ -28,11 +28,11 @@ function initMastodon(isDevMode) {
 const rateLimiterGroup = new Group({
     maxConcurrent: 1, // Only 1 request per user at a time
     minTime: 15000, // 15 seconds between requests
-    reservoir: 50, // tokens per user
-    reservoirRefreshAmount: 50,
-    reservoirIncreaseMaximum: 50,
-    reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
-});
+    reservoir: 5, // tokens per user
+    reservoirRefreshAmount: 5,
+    reservoirIncreaseMaximum: 5,
+    reservoirRefreshInterval: 1 * 60 * 60 * 1000, // 1 hour
+}); // 5 requests per hour per user
 
 module.exports = {
     initMastodon,
