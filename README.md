@@ -147,17 +147,20 @@ NEWSDATA_API_KEY=SET-UP-A-FREE-KEY-TO-GET-NEWS-DATA
 
 The bot supports the following commands when responding to a mention:
 
+_NOTE: Bot will now respect and maintain your visibility settings. If you DM, it will DM back._
+
 _command must be at the beginning of the mention (after the @mention)_
 
-### Following Only (bot account must follow user sending command)
-
--   "{prompt}" - Bot will respond to direct mentions. If no command is used, bot will use your mention text and generate a chat completion for reply.
--   "//img// {prompt}" or "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
--   "//img-asst// {prompt}" or "//image-assist// {prompt}" - Asks GPT-3 to revise your idea into a new image prompt, then sends for DALL-E image generation and returns image and prompt in reply.
+-   "{no command just text}" - Bot will respond to direct mentions. If no command is used, bot will use your mention text and generate a chat completion for reply.
 -   "//news//" – For now this only checks for a few articles with keywords "gpt OR ai OR llm OR openai OR copilot OR midjourney" in Science or Technology categories. It will then read and summarize them for you. I plan to expand this to take prompts for search criteria but the news API costs $$. Feel free to buy me a beer to help support the development!
 -   "//feedback// {feedback}" - Logs user feedback for review
 -   "//beta//" or "//beta-application//" - Posts the application link to the user
 -   "//help//" or "//commands//" - Posts a list of commands in reply
+
+### Following Only (bot account must follow user sending command)
+
+-   "//img// {prompt}" or "//image// {prompt}" - Treats as an image prompt, generates a DALL-E image, and posts it in reply
+-   "//img-asst// {prompt}" or "//image-assist// {prompt}" - Asks GPT-3 to revise your idea into a new image prompt, then sends for DALL-E image generation and returns image and prompt in reply.
 
 ([top](#description))
 
