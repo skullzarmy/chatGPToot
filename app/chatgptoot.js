@@ -41,7 +41,7 @@ async function downloadImage(url, dest) {
             writer.on("error", reject);
         });
     } catch (error) {
-        console.log("Error downloading image: " + error.message);
+        throw new Error("Error downloading image: " + error.message);
     }
 }
 
@@ -126,7 +126,7 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
                     }
                 });
             } catch (error) {
-                console.log(`Error posting toot: ${error}`);
+                throw new Error(`Error posting toot: ${error}`);
             }
 
             tootCount++;
@@ -140,7 +140,7 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
             };
             await mastodon.post("statuses", params);
         } catch (error) {
-            console.log(`Error posting toot: ${error}`);
+            throw new Error(`Error posting toot: ${error}`);
         }
     }
 }
@@ -210,7 +210,7 @@ async function getStatus() {
             .format(
                 "YYYY-MM-DD HH:mm:ss"
             )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
-        return status;
+        throw new Error(status);
     }
 }
 
@@ -535,6 +535,7 @@ async function handleBetaApplicationCommand(mention, isFollowing = false) {
             );
         } catch (error) {
             console.error("Error handling beta application command:", error);
+            throw error;
         }
     } else {
         try {
