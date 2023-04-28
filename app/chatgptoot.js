@@ -472,6 +472,7 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
 async function handleNewsCommand(mention) {
     try {
         const news = await newsChecker.fetchNews(3);
+        console.log(news);
         const msg = [
             {
                 role: "system",
@@ -480,6 +481,9 @@ async function handleNewsCommand(mention) {
         ];
         const summaries = [];
         for (const item of news) {
+            if (item.content == null) {
+                item.content = "";
+            }
             msg.push(
                 {
                     role: "system",
@@ -487,7 +491,7 @@ async function handleNewsCommand(mention) {
                 },
                 {
                     role: "system",
-                    content: `${item.content.substring(0, 5000)}...`,
+                    content: `${item.content.substring(0, 2000)}...`,
                 }
             );
             msg.push({
@@ -500,6 +504,7 @@ async function handleNewsCommand(mention) {
                 messages: msg,
             });
             summaries.push(`${item.title}\n${response.data.choices[0].message.content}\n${item.link}`);
+            console.log(summaries);
         }
 
         const reply = `@${mention.account.acct} ${summaries.join("\n\n")}`;
