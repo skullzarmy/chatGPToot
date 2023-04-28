@@ -41,7 +41,7 @@ async function downloadImage(url, dest) {
             writer.on("error", reject);
         });
     } catch (error) {
-        throw new Error("Error downloading image: " + error.message);
+        console.log("Error downloading image: " + error.message);
     }
 }
 
@@ -126,7 +126,7 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
                     }
                 });
             } catch (error) {
-                throw new Error(`Error posting toot: ${error}`);
+                console.log(`Error posting toot: ${error}`);
             }
 
             tootCount++;
@@ -140,7 +140,7 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
             };
             await mastodon.post("statuses", params);
         } catch (error) {
-            throw new Error(`Error posting toot: ${error}`);
+            console.log(`Error posting toot: ${error}`);
         }
     }
 }
@@ -210,7 +210,7 @@ async function getStatus() {
             .format(
                 "YYYY-MM-DD HH:mm:ss"
             )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is not working. Test response: Test failed`;
-        throw new Error(status);
+        return status;
     }
 }
 
@@ -266,7 +266,6 @@ async function checkMentions() {
         }
     } catch (error) {
         console.error("Error checking mentions:", error);
-        throw error;
     }
 }
 
@@ -336,7 +335,6 @@ async function processMention(mention, following) {
         }
     } catch (error) {
         console.error("Error processing mention:", error);
-        throw error;
     }
 }
 
@@ -395,7 +393,6 @@ async function handleImageCommand(mention, prompt, isFollowing = false) {
             });
         } catch (error) {
             console.error(`Error in handleImageCommand: ${JSON.stringify(error)}`);
-            throw error;
         }
     } else {
         console.log("Not following user.");
@@ -463,7 +460,6 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
             });
         } catch (error) {
             console.error(`Error in handleImageAssistCommand: ${JSON.stringify(error)}`);
-            throw error;
         }
     } else {
         console.log("Not following user.");
@@ -512,7 +508,6 @@ async function handleNewsCommand(mention) {
         logUsage(mention.account.acct, mention.status.id, "news", "unknown", "news");
     } catch (error) {
         console.error(`Error in handleNewsCommand: ${JSON.stringify(error)}`);
-        throw error;
     }
 }
 
@@ -526,7 +521,6 @@ async function handleHelpCommand(mention) {
         );
     } catch (error) {
         console.error(`Error handling help command: ${JSON.stringify(error)}`);
-        throw error;
     }
 }
 
@@ -541,7 +535,6 @@ async function handleBetaApplicationCommand(mention, isFollowing = false) {
             );
         } catch (error) {
             console.error("Error handling beta application command:", error);
-            throw error;
         }
     } else {
         try {
@@ -552,7 +545,6 @@ async function handleBetaApplicationCommand(mention, isFollowing = false) {
             );
         } catch (error) {
             console.error("Error handling beta application command:", error);
-            throw error;
         }
     }
 }
@@ -576,7 +568,6 @@ async function handleStatusCommand(mention) {
         }
     } catch (error) {
         console.error("Error handling status command:", error);
-        throw error;
     }
 }
 
@@ -616,7 +607,6 @@ async function handleRegularMention(mention) {
         }
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
-        throw error;
     }
 }
 
@@ -639,7 +629,6 @@ async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
         }
     } catch (error) {
         console.error(`Feedback Error: ${error}`);
-        throw error;
     }
 }
 
@@ -660,7 +649,6 @@ async function handleTootNowCommand(mention, prompt) {
         }
     } catch (error) {
         console.error(`Toot Now Error: ${error}`);
-        throw error;
     }
 }
 
@@ -680,7 +668,6 @@ async function handleImageNowCommand(mention, prompt) {
         }
     } catch (error) {
         console.error(`Image Now Error: ${error}`);
-        throw error;
     }
 }
 
@@ -775,7 +762,6 @@ async function generateImagePrompt(uPrompt = false) {
         return prompt;
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
-        throw error;
     }
 }
 
@@ -848,7 +834,6 @@ async function generateToot(prompt = false, rss = false) {
         }
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
-        throw error;
     }
 }
 
