@@ -375,7 +375,7 @@ async function handleImageCommand(mention, prompt, isFollowing = false) {
 
                 logUsage(mention.account.acct, mention.status.id, prompt, tokens, "image");
             } else {
-                tootText = `Image prompt: ${prompt.substring(0, 465)}\n#art #AIart #DALL-E`;
+                tootText = `Image prompt: ${prompt.substring(0, 465)}\n#art #AIart #DALLE`;
                 tootParams.status = tootText;
 
                 logUsage("mrroboto", null, "generate image", tokens, "image");
