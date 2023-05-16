@@ -113,18 +113,10 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
                     ...(in_reply_to_id ? { in_reply_to_id } : {}),
                 };
 
-                // Wrap the result in a promise and await
-                await new Promise(async (resolve, reject) => {
-                    try {
-                        const result = await mastodon.post("statuses", params);
-                        if (tootCount === 1) {
-                            in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
-                        }
-                        resolve(result);
-                    } catch (error) {
-                        reject(`Error posting toot: ${error}`);
-                    }
-                });
+                const result = await mastodon.post("statuses", params);
+                if (tootCount === 1) {
+                    in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
+                }
             } catch (error) {
                 throw new Error(`Error posting toot: ${error}`);
             }
