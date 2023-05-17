@@ -60,11 +60,14 @@ async function downloadImage(url, dest) {
  * This function adds context to an array of message objects.
  *
  * @param {array} msgs - array of message objects
- * @returns {Promise}
+ * @returns {array} - array of message objects with context added
  * @example
- * addContext(msgs)
+ *  msg = await addContext(msg)
  */
 async function addContext(msgs) {
+    // take a copy of msgs so we don't modify the original
+    msgs = msgs.slice();
+
     // const topTags = await getTrendingTags();
     const date = new Date();
     const systemMessage = {
@@ -98,6 +101,8 @@ async function addContext(msgs) {
     msgs.push(systemMessage);
     msgs.push(...newsMsg);
     msgs.push(news_disclaimer.slice()[0]);
+
+    return msgs;
 }
 
 /**
@@ -201,7 +206,7 @@ function dismissNotification(id) {
  *
  * @returns {Promise}
  * @example
- * getFollowing()
+ * const following = await getFollowing()
  */
 function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
@@ -231,7 +236,7 @@ function isAdmin(username) {
  *
  * @returns {Promise}
  * @example
- * getStatus()
+ * const status = await getStatus()
  */
 async function getStatus() {
     try {
@@ -278,7 +283,7 @@ async function getStatus() {
  *
  * @returns {Promise}
  * @example
- * getTrendingTags()
+ * const tags = await getTrendingTags()
  * @todo
  * This function is currently not enabled on botsin.space.
  * @todo
@@ -300,7 +305,7 @@ async function getTrendingTags() {
  * @param {int} tokens - number of tokens used so far
  * @returns {Promise}
  * @example
- * fetchConversation("123456789", [], 0)
+ * let conversation = fetchConversation("123456789", [], 0)
  */
 async function fetchConversation(statusId, messages = [], tokens = 0) {
     try {
@@ -752,7 +757,7 @@ async function handleRegularMention(mention) {
         };
         conversation.push(systemMessage);
 
-        await addContext(conversation);
+        conversation = await addContext(conversation);
 
         const response = await openai.createChatCompletion({
             model: config.gpt_model,
@@ -1043,7 +1048,7 @@ async function generateToot(prompt = false, rss = false) {
             },
         ];
 
-        await addContext(msg);
+        msg = await addContext(msg);
 
         if (prompt && !rss) {
             msg.push({
