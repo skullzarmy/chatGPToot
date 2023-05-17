@@ -5,6 +5,13 @@ const { format } = require("date-fns");
 
 const logsFolder = path.join(__dirname, "..", "logs");
 
+/**
+ *
+ * Reads all the usage logs and returns the data.
+ *
+ * @returns {Promise<{users: []}>}
+ * @throws {Error}
+ */
 async function readUsageLog() {
     try {
         const files = await fs.readdir(logsFolder);
@@ -23,6 +30,14 @@ async function readUsageLog() {
     }
 }
 
+/**
+ *
+ * Returns the stats for a user.
+ *
+ * @param {{name: string, interactions: []}} user
+ * @returns {{name: string, count: number, chatCount: number, imageCount: number, chatTokens: number, imageTokens: number, earliest: Date, latest: Date}}
+ * @throws {Error}
+ */
 function getUserStats(user) {
     const chats = user.interactions.filter((interaction) => interaction.requestType === "chat");
     const images = user.interactions.filter((interaction) => interaction.requestType === "image");
@@ -42,6 +57,15 @@ function getUserStats(user) {
     };
 }
 
+/**
+ *
+ * Generates the stats table.
+ *
+ * @param {string} startDate
+ * @param {string} endDate
+ * @returns {Promise<[{name: string, count: number, chatCount: number, imageCount: number, chatTokens: number, imageTokens: number, earliest: Date, latest: Date}]>}
+ * @throws {Error}
+ */
 async function generateStatsTable(startDate, endDate) {
     const usageData = await readUsageLog();
     let stats = [];
@@ -60,6 +84,15 @@ async function generateStatsTable(startDate, endDate) {
     return stats;
 }
 
+/**
+ *
+ * Generates the CSV file.
+ *
+ * @param {[{name: string, count: number, chatCount: number, imageCount: number, chatTokens: number, imageTokens: number, earliest: Date, latest: Date}]} stats
+ * @param {string} filename
+ * @returns {Promise<void>}
+ * @throws {Error}
+ */
 async function generateCsv(stats, filename) {
     let csv = "Username,Total Logs,Chat Logs,Image Logs,Total Chat Tokens,Total Image Tokens,Earliest Log,Latest Log\n";
     stats.forEach((stat) => {

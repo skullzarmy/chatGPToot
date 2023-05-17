@@ -25,6 +25,16 @@ let mastodon;
 //
 //
 
+/**
+ *
+ * This function downloads an image from a url and saves it to a specified path.
+ *
+ * @param {string} url - url of image to download
+ * @param {string} dest - path to save image to
+ * @returns {Promise}
+ * @example
+ * downloadImage("https://example.com/image.jpg", "/path/to/image.jpg")
+ */
 async function downloadImage(url, dest) {
     try {
         const response = await axios({
@@ -45,6 +55,15 @@ async function downloadImage(url, dest) {
     }
 }
 
+/**
+ *
+ * This function adds context to an array of message objects.
+ *
+ * @param {array} msgs - array of message objects
+ * @returns {Promise}
+ * @example
+ * addContext(msgs)
+ */
 async function addContext(msgs) {
     // const topTags = await getTrendingTags();
     const date = new Date();
@@ -81,6 +100,19 @@ async function addContext(msgs) {
     msgs.push(news_disclaimer.slice()[0]);
 }
 
+/**
+ *
+ * This function posts a toot to the Mastodon account.
+ *
+ * @param {string} status - text of toot
+ * @param {string} visibility - visibility of toot
+ * @param {string} in_reply_to_id - id of toot to reply to
+ * @param {string} account - account to reply to
+ * @returns {Promise}
+ * @example
+ * postToot("Hello, world!", "public", null, false)
+ * postToot("Hello, world!", "public", "123456789", "mrroboto")
+ */
 async function postToot(status, visibility, in_reply_to_id, account = false) {
     const maxChars = 490;
 
@@ -137,6 +169,15 @@ async function postToot(status, visibility, in_reply_to_id, account = false) {
     }
 }
 
+/**
+ *
+ * This function dismisses a notification.
+ *
+ * @param {string} id - id of notification to dismiss
+ * @returns {Promise}
+ * @example
+ * dismissNotification("123456789")
+ */
 function dismissNotification(id) {
     return new Promise(async (resolve, reject) => {
         try {
@@ -154,10 +195,27 @@ function dismissNotification(id) {
 //
 //
 
+/**
+ *
+ * This function gets the accounts the bot is following.
+ *
+ * @returns {Promise}
+ * @example
+ * getFollowing()
+ */
 function getFollowing() {
     return mastodon.get(`accounts/${process.env.MASTODON_ACCOUNT_ID}/following`);
 }
 
+/**
+ *
+ * This function checks if a user is an admin.
+ *
+ * @param {string} username - username to check
+ * @returns {boolean}
+ * @example
+ * isAdmin("mrroboto")
+ */
 function isAdmin(username) {
     console.log(`Checking if ${username} is an admin`);
     if (!process.env.MASTODON_ADMIN_ACCOUNT) {
@@ -167,6 +225,14 @@ function isAdmin(username) {
     }
 }
 
+/**
+ *
+ * This function gets the status of the bot.
+ *
+ * @returns {Promise}
+ * @example
+ * getStatus()
+ */
 async function getStatus() {
     try {
         const date = new Date();
@@ -206,6 +272,18 @@ async function getStatus() {
     }
 }
 
+/**
+ *
+ * This function gets the trending tags on the instance.
+ *
+ * @returns {Promise}
+ * @example
+ * getTrendingTags()
+ * @todo
+ * This function is currently not enabled on botsin.space.
+ * @todo
+ * This function is currently not used.
+ */
 async function getTrendingTags() {
     const response = await mastodon.get("trends/tags");
     const tags = response.data.map((tag) => tag.name);
@@ -213,6 +291,17 @@ async function getTrendingTags() {
     return false;
 }
 
+/**
+ *
+ * This function fetches a conversation from a status id.
+ *
+ * @param {string} statusId - id of status to fetch conversation for
+ * @param {array} messages - array of message objects
+ * @param {int} tokens - number of tokens used so far
+ * @returns {Promise}
+ * @example
+ * fetchConversation("123456789", [], 0)
+ */
 async function fetchConversation(statusId, messages = [], tokens = 0) {
     try {
         const status = await mastodon.get(`statuses/${statusId}`);
@@ -238,6 +327,14 @@ async function fetchConversation(statusId, messages = [], tokens = 0) {
     return messages;
 }
 
+/**
+ *
+ * This function checks for mentions and processes them.
+ *
+ * @returns {Promise}
+ * @example
+ * checkMentions()
+ */
 async function checkMentions() {
     try {
         const notifications = await mastodon.get("notifications", { types: ["mention"] });
@@ -267,6 +364,16 @@ async function checkMentions() {
 //
 //
 
+/**
+ *
+ * This function processes a mention. It takes a mention object and an array of following objects. It then determines what command was used and calls the appropriate function to handle the command.
+ *
+ * @param {object} mention - mention object
+ * @param {array} following - array of following objects
+ * @returns {Promise}
+ * @example
+ * processMention(mention, following)
+ */
 async function processMention(mention, following) {
     try {
         await dismissNotification(mention.id);
@@ -330,6 +437,17 @@ async function processMention(mention, following) {
     }
 }
 
+/**
+ *
+ * This function handles the image command. It takes a mention object, a prompt, and a boolean indicating whether or not the user is following the bot. It then generates an image based on the prompt and posts it to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @param {string} prompt - prompt to use for image generation
+ * @param {boolean} isFollowing - whether or not the user is following the bot
+ * @returns {Promise}
+ * @example
+ * handleImageCommand(mention, "a cat eating a taco", true)
+ */
 async function handleImageCommand(mention, prompt, isFollowing = false) {
     if (isFollowing) {
         try {
@@ -394,6 +512,17 @@ async function handleImageCommand(mention, prompt, isFollowing = false) {
     }
 }
 
+/**
+ *
+ * This function handles the image assist command. It takes a mention object, a prompt, and a boolean indicating whether or not the user is following the bot. It then generates an image based on the prompt and posts it to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @param {string} prompt - prompt to use for image generation
+ * @param {boolean} isFollowing - whether or not the user is following the bot
+ * @returns {Promise}
+ * @example
+ * handleImageAssistCommand(mention, "a cat eating a taco", true)
+ */
 async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
     if (isFollowing) {
         try {
@@ -461,6 +590,15 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
     }
 }
 
+/**
+ *
+ * This function handles the news command. It takes a mention object and fetches the latest news articles. It then summarizes them and posts them to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleNewsCommand(mention)
+ */
 async function handleNewsCommand(mention) {
     try {
         const news = await newsChecker.fetchNews(3);
@@ -491,7 +629,7 @@ async function handleNewsCommand(mention) {
                     "Please summarize the latest news article in one or two sentences. You can also add your own thoughts or opinions.",
             });
             const response = await openai.createChatCompletion({
-                model: "gpt-3.5-turbo",
+                model: config.gpt_model,
                 messages: msg,
             });
             summaries.push(`${item.title}\n${response.data.choices[0].message.content}\n${item.link}`);
@@ -506,6 +644,15 @@ async function handleNewsCommand(mention) {
     }
 }
 
+/**
+ *
+ * This function handles the help command. It takes a mention object and posts a help message to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleHelpCommand(mention)
+ */
 async function handleHelpCommand(mention) {
     try {
         const tootVis = mention ? mention.status.visibility : false || "public";
@@ -519,6 +666,15 @@ async function handleHelpCommand(mention) {
     }
 }
 
+/**
+ *
+ * This function handles the beta application command. It takes a mention object and posts a message to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleBetaApplicationCommand(mention)
+ */
 async function handleBetaApplicationCommand(mention, isFollowing = false) {
     const tootVis = mention ? mention.status.visibility : false || "public";
     if (isFollowing) {
@@ -545,6 +701,15 @@ async function handleBetaApplicationCommand(mention, isFollowing = false) {
     }
 }
 
+/**
+ *
+ * This function handles the Status command. It takes a mention object and posts the current status of the bot.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleStatusCommand(mention)
+ */
 async function handleStatusCommand(mention) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
@@ -567,6 +732,15 @@ async function handleStatusCommand(mention) {
     }
 }
 
+/**
+ *
+ * This function handles the regular mention. It takes a mention object and posts a response to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleRegularMention(mention)
+ */
 async function handleRegularMention(mention) {
     try {
         let conversation = mention_prompt.slice();
@@ -581,7 +755,7 @@ async function handleRegularMention(mention) {
         await addContext(conversation);
 
         const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: config.gpt_model,
             messages: conversation,
         });
 
@@ -606,6 +780,17 @@ async function handleRegularMention(mention) {
     }
 }
 
+/**
+ *
+ * This function handles the feedback command. It takes a mention object, a prompt, and a boolean indicating whether or not the user is following the bot. It then logs the feedback and posts a response to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @param {string} prompt - prompt to use for feedback
+ * @param {boolean} isFollowing - whether or not the user is following the bot
+ * @returns {Promise}
+ * @example
+ * handleFeedbackCommand(mention, "This bot is awesome!", true)
+ */
 async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
     try {
         logFeedback(mention.account.id, mention.status.id, prompt);
@@ -628,6 +813,16 @@ async function handleFeedbackCommand(mention, prompt, isFollowing = false) {
     }
 }
 
+/**
+ *
+ * This function handles the toot now command. It takes a mention object and a prompt. It then generates a toot based on the prompt and posts it to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @param {string} prompt - prompt to use for toot
+ * @returns {Promise}
+ * @example
+ * handleTootNowCommand(mention, "This is a test toot.")
+ */
 async function handleTootNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
@@ -641,6 +836,9 @@ async function handleTootNowCommand(mention, prompt) {
             );
         } else {
             const genToot = await generateToot(prompt);
+            if (!genToot) {
+                throw new Error("Error generating toot");
+            }
             await postToot(genToot, "public", null, false);
         }
     } catch (error) {
@@ -648,6 +846,16 @@ async function handleTootNowCommand(mention, prompt) {
     }
 }
 
+/**
+ *
+ * This function handles the image now command. It takes a mention object and a prompt. It then generates an image based on the prompt and posts it to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @param {string} prompt - prompt to use for image generation
+ * @returns {Promise}
+ * @example
+ * handleImageNowCommand(mention, "a cat eating a taco")
+ */
 async function handleImageNowCommand(mention, prompt) {
     try {
         const is_admin = await isAdmin(mention.account.acct);
@@ -667,6 +875,14 @@ async function handleImageNowCommand(mention, prompt) {
     }
 }
 
+/**
+ *
+ * This function handles the image loop command. It generates an image prompt and posts it to the bot's account.
+ *
+ * @returns {Promise}
+ * @example
+ * handleImageLoop()
+ */
 async function handleImageLoop() {
     const prompt = await generateImagePrompt();
     handleImageCommand(null, prompt, true);
@@ -674,19 +890,41 @@ async function handleImageLoop() {
     console.log(`Image loop called at ${now.format()}`);
 }
 
+/**
+ *
+ * This function handles the toot loop command. It generates a toot and posts it to the bot's account.
+ *
+ * @returns {Promise}
+ * @example
+ * handleTootLoop()
+ */
 async function handleTootLoop() {
     const toot = await generateToot();
+    if (!toot) {
+        throw new Error("Error generating toot");
+    }
     postToot(toot, "public", null);
     const now = moment().tz("America/Los_Angeles");
     console.log(`Toot loop called at ${now.format()}`);
 }
 
+/**
+ *
+ * This function handles the RSS loop command. It checks for new RSS items and posts them to the bot's account.
+ *
+ * @returns {Promise}
+ * @example
+ * handleRssLoop()
+ */
 async function handleRssLoop() {
     const newItems = await rss.checkNewItems();
     if (newItems.length > 0) {
         for (const item of newItems) {
             try {
                 const toot = await generateToot(false, item);
+                if (!toot) {
+                    throw new Error("Error generating toot");
+                }
                 postToot(toot, "public", null);
                 rss.logItem(item.guid[0]);
             } catch (error) {
@@ -697,6 +935,15 @@ async function handleRssLoop() {
     console.log(`${newItems.length} new RSS items processed at ${new Date()}`);
 }
 
+/**
+ *
+ * This function handles the limit reached command. It takes a mention object and posts a response to the user's account.
+ *
+ * @param {object} mention - mention object
+ * @returns {Promise}
+ * @example
+ * handleLimitReached(mention)
+ */
 async function handleLimitReached(mention) {
     await dismissNotification(mention.id);
     const tootVis = mention ? mention.status.visibility : false || "public";
@@ -713,13 +960,22 @@ async function handleLimitReached(mention) {
 //
 //
 
-async function generateImagePrompt(uPrompt = false) {
-    if (uPrompt) {
-        uPrompt =
+/**
+ *
+ * This function generates an image prompt. It takes a prompt and generates an image prompt based on it.
+ *
+ * @param {string} prompt - prompt to use for image generation
+ * @returns {Promise}
+ * @example
+ * generateImagePrompt("a cat eating a taco")
+ */
+async function generateImagePrompt(prompt = false) {
+    if (prompt) {
+        prompt =
             "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. This is my idea: " +
-            uPrompt;
+            prompt;
     } else {
-        uPrompt =
+        prompt =
             "Please create an image generation prompt including subject, scene, and style cues, as well as related artist names, to ensure a high quality generation. Keep it two sentences or less. What image would you like to create?";
     }
     try {
@@ -746,11 +1002,11 @@ async function generateImagePrompt(uPrompt = false) {
 
         msg.push({
             role: "user",
-            content: uPrompt,
+            content: prompt,
         });
 
         const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: config.gpt_model,
             messages: msg,
         });
 
@@ -761,6 +1017,18 @@ async function generateImagePrompt(uPrompt = false) {
     }
 }
 
+/**
+ *
+ * This function generates a toot. It takes a prompt and an RSS object and generates a toot based on them.
+ *
+ * @param {string} prompt - prompt to use for toot generation
+ * @param {object} rss - RSS object to use for toot generation
+ * @returns {Promise}
+ * @example
+ * generateToot("This is a test toot.")
+ * generateToot(false, rss)
+ * generateToot("This is a test toot.", rss)
+ */
 async function generateToot(prompt = false, rss = false) {
     try {
         const msg = [
@@ -814,7 +1082,7 @@ async function generateToot(prompt = false, rss = false) {
         }
 
         const response = await openai.createChatCompletion({
-            model: "gpt-3.5-turbo",
+            model: config.gpt_model,
             messages: msg,
         });
 
@@ -830,6 +1098,7 @@ async function generateToot(prompt = false, rss = false) {
         }
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
+        return false;
     }
 }
 
@@ -839,6 +1108,14 @@ async function generateToot(prompt = false, rss = false) {
 //
 //
 
+/**
+ *
+ * This function is the main function. It initializes the bot and starts the loops.
+ *
+ * @returns {Promise}
+ * @example
+ * main()
+ */
 async function main() {
     const botStartTime = moment().tz("UTC");
     console.log(`Bot started at ${botStartTime.format()}`);
@@ -908,7 +1185,8 @@ async function main() {
 }
 
 // async function testMode() {
-//     // code to run in test mode
+//     const toot = await generateToot();
+//     console.log(toot);
 // }
 // testMode();
 

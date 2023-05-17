@@ -7,6 +7,14 @@ const { Group } = require("bottleneck");
 const configuration = new Configuration({ apiKey: process.env.OPENAI_KEY });
 const openai = new OpenAIApi(configuration);
 
+/**
+ *
+ * This function initializes the Mastodon API client.
+ *
+ * @param {boolean} isDevMode
+ * @returns {T}
+ * @throws {Error}
+ */
 function initMastodon(isDevMode = false) {
     let mastodon;
     if (!isDevMode) {

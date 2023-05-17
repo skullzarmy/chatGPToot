@@ -3,6 +3,12 @@ const path = require("path");
 
 const feedbackLogFile = path.join(path.resolve(__dirname, "..", "feedback"), "feedback_log.json");
 
+/**
+ *
+ * This function reads the feedback log file and returns the parsed data.
+ *
+ * @returns {Promise<{feedback: {userId: string, statusId: string, content: string, timestamp: Date}[]}>}
+ */
 async function readFeedbackLog() {
     try {
         const data = await fs.readFile(feedbackLogFile, "utf-8");
@@ -22,6 +28,12 @@ async function readFeedbackLog() {
     }
 }
 
+/**
+ *
+ * This function writes the given data to the feedback log file.
+ *
+ * @param {{feedback: {userId: string, statusId: string, content: string, timestamp: Date}[]}} data
+ */
 async function writeFeedbackLog(data) {
     try {
         await fs.writeFile(feedbackLogFile, JSON.stringify(data, null, 2));
@@ -31,6 +43,16 @@ async function writeFeedbackLog(data) {
     }
 }
 
+/**
+ *
+ * This function logs the given feedback to the feedback log file.
+ *
+ * @param {string} userId
+ * @param {string} statusId
+ * @param {string} content
+ * @returns {Promise<void>}
+ * @throws {Error}
+ */
 async function logFeedback(userId, statusId, content) {
     try {
         const feedbackData = await readFeedbackLog();
@@ -47,6 +69,13 @@ async function logFeedback(userId, statusId, content) {
     }
 }
 
+/**
+ *
+ * This function counts the number of feedbacks in the feedback log file.
+ *
+ * @returns {Promise<number>}
+ * @throws {Error}
+ */
 async function countFeedback() {
     try {
         const feedbackData = await readFeedbackLog();

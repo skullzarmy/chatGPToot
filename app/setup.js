@@ -14,21 +14,9 @@ foldersToCreate.forEach((folder) => {
 });
 
 // Install and start Redis based on the OS
-// const isWindows = process.platform === "win32";
-// const isMac = process.platform === "darwin";
-// const isLinux = process.platform === "linux";
-
-// function runCommand(command) {
-//     return new Promise((resolve, reject) => {
-//         exec(command, (error, stdout, stderr) => {
-//             if (error) {
-//                 reject(error);
-//             } else {
-//                 resolve(stdout ? stdout : stderr);
-//             }
-//         });
-//     });
-// }
+const isWindows = process.platform === "win32";
+const isMac = process.platform === "darwin";
+const isLinux = process.platform === "linux";
 
 async function installAndStartRedis() {
     if (isMac) {
@@ -72,6 +60,6 @@ async function installAndStartRedis() {
     console.log("Redis installed and started successfully.");
 }
 
-installAndStartRedis().catch((error) => {
-    console.error(`Error: ${error.message}`);
-});
+// installAndStartRedis().catch((error) => {
+//     console.error(`Error: ${error.message}`);
+// });

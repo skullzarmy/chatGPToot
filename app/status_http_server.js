@@ -5,6 +5,14 @@ const { exec } = require("child_process");
 const port = process.env.PORT || 3000;
 const authToken = process.env.STATUS_API_TOKEN; // Load the secret token from the .env file
 
+/**
+ *
+ * Checks if the bot is running by checking if the process is running.
+ *
+ * @param {function} callback
+ * @returns {void}
+ * @throws {Error}
+ */
 function isBotRunning(callback) {
     exec("ps aux | grep node", (error, stdout, stderr) => {
         if (error) {
@@ -20,6 +28,14 @@ function isBotRunning(callback) {
     });
 }
 
+/**
+ *
+ * Checks if the blog is online by checking if the HTTP status code is 200.
+ *
+ * @param {function} callback
+ * @returns {void}
+ * @throws {Error}
+ */
 function isBlogOnline(callback) {
     exec("curl -s -o /dev/null -w '%{http_code}' https://socaltechlab.com", (error, stdout, stderr) => {
         if (error) {

@@ -2,6 +2,7 @@
     "bot_acct_short": "@mrroboto",
     "bot_acct": "@mrroboto@botsin.space",
     "rss_urls": ["https://socaltechlab.com/rss"],
+    "gpt_model": "gpt-3.5-turbo",
     "example_image_prompts": [
         "Harry Potter with purple hair planting carrots in a zen garden, Pixel Art, 8-bit",
         "Winnie the Pooh driving a tesla in a bathroom, Digital art, E H Shepard",

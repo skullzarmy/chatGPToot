@@ -3,11 +3,25 @@ const path = require("path");
 
 const logsDirectory = path.join(__dirname, "..", "logs");
 
+/**
+ *
+ * Returns the path to the current usage log file.
+ *
+ * @returns {string}
+ * @throws {Error}
+ */
 function getCurrentUsageLogFile() {
     const today = new Date().toISOString().slice(0, 10);
     return path.join(logsDirectory, `usage_log_${today}.json`);
 }
 
+/**
+ *
+ * Reads the current usage log file and returns the data.
+ *
+ * @returns {Promise<{users: []}>}
+ * @throws {Error}
+ */
 async function readUsageLog() {
     const usageLogFile = getCurrentUsageLogFile();
     try {
@@ -21,6 +35,14 @@ async function readUsageLog() {
     return JSON.parse(data);
 }
 
+/**
+ *
+ * Writes the usage log data to the current usage log file.
+ *
+ * @param {{users: []}} data
+ * @returns {Promise<void>}
+ * @throws {Error}
+ */
 async function writeUsageLog(data) {
     const usageLogFile = getCurrentUsageLogFile();
     try {
@@ -31,6 +53,18 @@ async function writeUsageLog(data) {
     }
 }
 
+/**
+ *
+ * Logs the usage of the bot.
+ *
+ * @param {string} userName
+ * @param {string} statusId
+ * @param {string} content
+ * @param {number} tokens
+ * @param {string} requestType
+ * @returns {Promise<void>}
+ * @throws {Error}
+ */
 async function logUsage(userName, statusId, content, tokens, requestType) {
     try {
         const usageData = await readUsageLog();
