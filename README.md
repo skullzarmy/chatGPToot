@@ -235,6 +235,11 @@ Modify the [config.json](config.json) file and add any number of RSS feeds to fo
     -   Big change to the '//news//' command. Will now loop each article, get a single summary, and stitch it all into a summarized response.
     -   Bot now respects and responds in the visibility setting that was used in the mention. Will no longer reply publicly to a DM or unlisted toot.
         -   Various modifications to reply formatting to ensure @s are used (especially in multi-toot replies) to ensure DM messages can all be seen by the intended recipient.
+-   2023-05-16
+    -   Added JSDocs documentation to all pertinent files
+    -   Misc housekeeping & code cleanup
+    -   In preparation for GPT-4, the model used is now configured in `config.json` rather than hardcoded.
+    -   Improvements to `postToot()` to better handle multi-toots and avoid race condition where secondary toots were not 'in reply to' the thread properly.
 
 ([top](#description))
 
