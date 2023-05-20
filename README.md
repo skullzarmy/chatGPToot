@@ -4,6 +4,7 @@
 
 ![GitHub issues](https://img.shields.io/github/issues-raw/skullzarmy/chatGPToot)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr-raw/skullzarmy/chatGPToot)
+[![Known Vulnerabilities](https://snyk.io/test/github/skullzarmy/chatGPToot/badge.svg)](https://snyk.io/test/github/skullzarmy/chatGPToot)
 
 ## Description
 
