@@ -35,14 +35,12 @@ async function readUsageLog() {
  * Returns the stats for a user.
  *
  * @param {{name: string, interactions: []}} user
- * @returns {{name: string, count: number, chatCount: number, imageCount: number, chatTokens: number, imageTokens: number, earliest: Date, latest: Date}}
+ * @returns {{name: string, count: number, chatCount: number, imageCount: number, earliest: Date, latest: Date}}
  * @throws {Error}
  */
 function getUserStats(user) {
     const chats = user.interactions.filter((interaction) => interaction.requestType === "chat");
     const images = user.interactions.filter((interaction) => interaction.requestType === "image");
-    const chatTokens = chats.reduce((total, interaction) => total + interaction.tokens, 0);
-    const imageTokens = images.reduce((total, interaction) => total + interaction.tokens, 0);
     const earliest = new Date(Math.min(...user.interactions.map((interaction) => new Date(interaction.timestamp))));
     const latest = new Date(Math.max(...user.interactions.map((interaction) => new Date(interaction.timestamp))));
     return {
@@ -50,8 +48,6 @@ function getUserStats(user) {
         count: user.interactions.length,
         chatCount: chats.length,
         imageCount: images.length,
-        chatTokens: chatTokens,
-        imageTokens: imageTokens,
         earliest: earliest,
         latest: latest,
     };
@@ -96,9 +92,10 @@ async function generateStatsTable(startDate, endDate) {
 async function generateCsv(stats, filename) {
     let csv = "Username,Total Logs,Chat Logs,Image Logs,Total Chat Tokens,Total Image Tokens,Earliest Log,Latest Log\n";
     stats.forEach((stat) => {
-        csv += `${stat.name},${stat.count},${stat.chatCount},${stat.imageCount},${stat.chatTokens},${
-            stat.imageTokens
-        },${format(stat.earliest, "yyyy-MM-dd HH:mm:ss")},${format(stat.latest, "yyyy-MM-dd HH:mm:ss")}\n`;
+        csv += `${stat.name},${stat.count},${stat.chatCount},${stat.imageCount},${format(
+            stat.earliest,
+            "yyyy-MM-dd HH:mm:ss"
+        )},${format(stat.latest, "yyyy-MM-dd HH:mm:ss")}\n`;
     });
     await fs.writeFile(filename, csv);
 }

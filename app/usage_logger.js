@@ -60,22 +60,21 @@ async function writeUsageLog(data) {
  * @param {string} userName
  * @param {string} statusId
  * @param {string} content
- * @param {number} tokens
  * @param {string} requestType
  * @returns {Promise<void>}
  * @throws {Error}
  */
-async function logUsage(userName, statusId, content, tokens, requestType) {
+async function logUsage(userName, statusId, content, requestType) {
     try {
         const usageData = await readUsageLog();
         const existingUser = usageData.users.find((user) => user.name === userName);
 
         if (existingUser) {
-            existingUser.interactions.push({ statusId, content, tokens, requestType, timestamp: new Date() });
+            existingUser.interactions.push({ statusId, content, requestType, timestamp: new Date() });
         } else {
             usageData.users.push({
                 name: userName,
-                interactions: [{ statusId, content, tokens, requestType, timestamp: new Date() }],
+                interactions: [{ statusId, content, requestType, timestamp: new Date() }],
             });
         }
 

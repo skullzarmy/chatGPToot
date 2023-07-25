@@ -1,18 +1,30 @@
 const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
-const http = require("http");
+const express = require("express");
+const https = require("https");
+const rateLimit = require("express-rate-limit");
 const { exec } = require("child_process");
-const port = process.env.PORT || 3000;
-const authToken = process.env.STATUS_API_TOKEN; // Load the secret token from the .env file
 
-/**
- *
- * Checks if the bot is running by checking if the process is running.
- *
- * @param {function} callback
- * @returns {void}
- * @throws {Error}
- */
+const app = express();
+const port = process.env.PORT || 3000;
+const authToken = process.env.STATUS_API_TOKEN;
+
+app.use(
+    rateLimit({
+        windowMs: 15 * 60 * 1000, // 15 minutes
+        max: 100, // limit each IP to 100 requests per windowMs
+    })
+);
+
+app.use((req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Auth-Token");
+    res.setHeader("Content-Type", "application/json");
+
+    next();
+});
+
 function isBotRunning(callback) {
     exec("ps aux | grep node", (error, stdout, stderr) => {
         if (error) {
@@ -28,63 +40,34 @@ function isBotRunning(callback) {
     });
 }
 
-/**
- *
- * Checks if the blog is online by checking if the HTTP status code is 200.
- *
- * @param {function} callback
- * @returns {void}
- * @throws {Error}
- */
 function isBlogOnline(callback) {
-    exec("curl -s -o /dev/null -w '%{http_code}' https://socaltechlab.com", (error, stdout, stderr) => {
-        if (error) {
-            console.error(`exec error: ${error}`);
+    https
+        .get("https://socaltechlab.com", (res) => {
+            callback(res.statusCode === 200);
+        })
+        .on("error", (err) => {
+            console.error(`Error: ${err.message}`);
             callback(false);
-            return;
-        }
-
-        const blogOnline = stdout.trim() === "200";
-        callback(blogOnline);
-    });
+        });
 }
 
-const server = http.createServer((req, res) => {
-    // Set the CORS headers
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Auth-Token");
-    res.setHeader("Content-Type", "application/json");
+app.get("/status", (req, res) => {
+    const requestToken = req.headers["x-auth-token"];
 
-    if (req.method === "OPTIONS") {
-        // Preflight request. Reply successfully:
-        res.statusCode = 200;
-        res.end();
+    if (requestToken !== authToken) {
+        res.status(401).json({ message: "Unauthorized" });
         return;
     }
 
-    if (req.url === "/status" && req.method === "GET") {
-        const requestToken = req.headers["x-auth-token"];
-
-        if (requestToken !== authToken) {
-            res.statusCode = 401;
-            res.end("Unauthorized");
-            return;
-        }
-
-        isBotRunning((botRunning) => {
-            isBlogOnline((blogOnline) => {
-                const botStatus = botRunning ? "online" : "offline";
-                const blogStatus = blogOnline ? "online" : "offline";
-                res.end(JSON.stringify({ bot: { status: botStatus }, blog: { status: blogStatus } }));
-            });
+    isBotRunning((botRunning) => {
+        isBlogOnline((blogOnline) => {
+            const botStatus = botRunning ? "online" : "offline";
+            const blogStatus = blogOnline ? "online" : "offline";
+            res.json({ bot: { status: botStatus }, blog: { status: blogStatus } });
         });
-    } else {
-        res.statusCode = 401;
-        res.end("Unauthorized");
-    }
+    });
 });
 
-server.listen(port, () => {
+app.listen(port, () => {
     console.log(`Status HTTP server listening at http://localhost:${port}`);
 });
