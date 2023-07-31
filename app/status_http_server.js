@@ -3,6 +3,7 @@ dotenvSafe.config();
 const express = require("express");
 const https = require("https");
 const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
 const { exec } = require("child_process");
 
 const app = express();
@@ -15,6 +16,9 @@ app.use(
         max: 100, // limit each IP to 100 requests per windowMs
     })
 );
+
+app.use(helmet());
+app.use(helmet.hidePoweredBy()); // Disable X-Powered-By header
 
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");

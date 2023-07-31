@@ -119,41 +119,40 @@ async function addContext(msgs) {
  * postToot("Hello, world!", "public", "123456789", "mrroboto")
  */
 async function postToot(status, visibility, in_reply_to_id, account = false) {
-    const maxChars = 490;
+    const maxChars = 480;
+    const accountLength = account ? account.length + " cont.| ".length + 1 : 0; // account name length + formatting
 
-    if (status.length > 500) {
+    if (status.length > maxChars) {
         let statusCopy = status;
         let tootCount = 1;
         let tootTexts = [];
 
         // Split statusCopy into tootTexts
         while (statusCopy.length > 0) {
-            let lastSpace = statusCopy.substring(0, maxChars).lastIndexOf(" ");
+            let lastSpace = statusCopy.substring(0, maxChars - accountLength).lastIndexOf(" ");
             if (lastSpace === -1 || statusCopy.length <= maxChars) {
-                lastSpace = maxChars;
+                lastSpace = maxChars - accountLength;
             }
             tootTexts.push(statusCopy.substring(0, lastSpace));
-            statusCopy = statusCopy.substring(lastSpace + 1);
+            statusCopy = statusCopy.substring(lastSpace).trim();
         }
 
         // Calculate totalToots
         const totalToots = tootTexts.length;
 
         // Post toots in order
-        for (const tootText of tootTexts) {
+        for await (const tootText of tootTexts) {
             try {
                 const params = {
                     status: `${
-                        account && tootCount > 1 ? "@" + account + " cont. " : ""
+                        account && tootCount > 1 ? "@" + account + " cont.| " : account ? "@" + account + " " : ""
                     }${tootText} [${tootCount}/${totalToots}]`,
                     visibility,
                     ...(in_reply_to_id ? { in_reply_to_id } : {}),
                 };
 
                 const result = await mastodon.post("statuses", params);
-                if (tootCount === 1) {
-                    in_reply_to_id = result.data.id; // reply to the first toot for the subsequent toots
-                }
+                in_reply_to_id = result.data.id; // reply to the toot just posted
             } catch (error) {
                 throw new Error(`Error posting toot: ${error}`);
             }
