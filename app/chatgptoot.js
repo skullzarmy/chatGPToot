@@ -1014,8 +1014,8 @@ async function generateImagePrompt(prompt = false) {
             messages: msg,
         });
 
-        const prompt = response.data.choices[0].message.content;
-        return prompt;
+        const final_prompt = response.data.choices[0].message.content;
+        return final_prompt;
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
     }
