@@ -32,7 +32,7 @@ jobs:
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "pkill -f 'node app/chatgptoot.js' || true" && echo "Attempted to kill existing bot processes"
 
                   # Start Bot
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &" && echo "Bot started"
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 & disown" && echo "Bot started"
 
                   # Remove Deploy Key
                   echo "Removing deploy key"
