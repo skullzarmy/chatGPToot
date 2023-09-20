@@ -13,28 +13,49 @@ jobs:
             - name: Checkout code
               uses: actions/checkout@v2
 
-            - name: Deploy to DigitalOcean
+            - name: Setup SSH Key
+              run: |
+                  echo "$PRIVATE_KEY" > deploy_key
+                  chmod 600 deploy_key
+
+            - name: Git Pull on Server
               env:
                   PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
                   HOST: ${{ secrets.DROPLET_IP }}
                   USERNAME: skullzarmy
               run: |
-                  echo "$PRIVATE_KEY" > deploy_key
-                  chmod 600 deploy_key
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master"
+
+            - name: NPM Install on Server
+              env:
+                  PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  HOST: ${{ secrets.DROPLET_IP }}
+                  USERNAME: skullzarmy
+              run: |
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && npm install"
+
+            - name: Kill Existing Bot Process on Server
+              env:
+                  PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  HOST: ${{ secrets.DROPLET_IP }}
+                  USERNAME: skullzarmy
+              run: |
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "
-                  cd /home/skullzarmy/chatGPToot && 
-                  git pull origin master && 
-                  npm install &&
-                  # Find and kill the existing processes
                   PIDS=\$(pgrep -f 'node app/chatgptoot.js')
                   for PID in \$PIDS; do
                       if [ ! -z \$PID ] && kill -0 \$PID 2>/dev/null; then 
-                          kill \$PID
+                          kill -9 \$PID
                       fi
-                  done &&
-                  # Start the new process
-                  nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &
-                  disown
-                  exit 0
-                  "
-                  rm -f deploy_key
+                  done"
+
+            - name: Start Bot on Server
+              env:
+                  PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  HOST: ${{ secrets.DROPLET_IP }}
+                  USERNAME: skullzarmy
+              run: |
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 & disown"
+
+            - name: Cleanup SSH Key
+              run: |
+                  rm -
