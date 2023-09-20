@@ -23,7 +23,7 @@ jobs:
                   chmod 600 deploy_key
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master"
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && npm install"
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "pkill -f 'node app/chatgptoot.js' && echo 'Killed existing bot processes' || echo 'No bot processes found'"
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "pkill -f 'node app/chatgptoot.js' || true && echo 'Attempted to kill existing bot processes'"
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &"
                   echo "Removing deploy key"
                   rm -f deploy_key
