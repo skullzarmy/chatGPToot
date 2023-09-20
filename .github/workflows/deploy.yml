@@ -21,22 +21,15 @@ jobs:
               run: |
                   echo "$PRIVATE_KEY" > deploy_key
                   chmod 600 deploy_key
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master"
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && npm install"
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "
-                  cd /home/skullzarmy/chatGPToot && 
-                  git pull origin master && 
-                  npm install &&
-                  # Find and kill the existing processes
                   PIDS=\$(pgrep -f 'node app/chatgptoot.js')
                   for PID in \$PIDS; do
                       if [ ! -z \$PID ] && kill -0 \$PID 2>/dev/null; then 
                           kill \$PID
                       fi
-                  done &&
-                  # Start the new process
-                  nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &
-                  disown
-                  echo "Bot started and disowned"
-                  exit 0
-                  "
+                  done"
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &"
                   echo "Removing deploy key"
                   rm -f deploy_key
