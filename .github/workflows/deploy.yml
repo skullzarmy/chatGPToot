@@ -1,0 +1,34 @@
+name: Deploy to DigitalOcean
+
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Deploy to DigitalOcean
+              env:
+                  PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+                  HOST: ${{ secrets.DROPLET_IP }}
+                  USERNAME: skullzarmy
+              run: |
+                  echo "$PRIVATE_KEY" > deploy_key
+                  chmod 600 deploy_key
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "
+                  cd /home/skullzarmy/chatGPToot && 
+                  git pull origin master && 
+                  npm install &&
+                  # Find and kill the existing process
+                  PID=\$(pgrep -f 'node app/chatgptoot.js') && 
+                  if [ ! -z \$PID ]; then kill \$PID; fi &&
+                  # Start the new process
+                  npm run bot
+                  "
+                  rm -f deploy_key
