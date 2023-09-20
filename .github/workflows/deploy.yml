@@ -35,6 +35,8 @@ jobs:
                   # Start the new process
                   nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &
                   disown
+                  echo "Bot started and disowned"
                   exit 0
                   "
+                  echo "Removing deploy key"
                   rm -f deploy_key
