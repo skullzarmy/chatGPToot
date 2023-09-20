@@ -24,6 +24,7 @@ jobs:
                   HOST: ${{ secrets.DROPLET_IP }}
                   USERNAME: skullzarmy
               run: |
+                  chmod 600 deploy_key
                   ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master"
 
             - name: NPM Install on Server
