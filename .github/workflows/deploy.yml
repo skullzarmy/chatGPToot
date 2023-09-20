@@ -25,9 +25,13 @@ jobs:
                   cd /home/skullzarmy/chatGPToot && 
                   git pull origin master && 
                   npm install &&
-                  # Find and kill the existing process
-                  PID=\$(pgrep -f 'node app/chatgptoot.js') && 
-                  if [ ! -z \$PID ]; then kill \$PID; fi &&
+                  # Find and kill the existing processes
+                  PIDS=\$(pgrep -f 'node app/chatgptoot.js')
+                  for PID in \$PIDS; do
+                      if [ ! -z \$PID ]; then 
+                          kill \$PID
+                      fi
+                  done &&
                   # Start the new process
                   npm run bot
                   "
