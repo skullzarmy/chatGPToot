@@ -28,7 +28,7 @@ jobs:
                   # Find and kill the existing processes
                   PIDS=\$(pgrep -f 'node app/chatgptoot.js')
                   for PID in \$PIDS; do
-                      if [ ! -z \$PID ]; then 
+                      if [ ! -z \$PID ] && kill -0 \$PID 2>/dev/null; then 
                           kill \$PID
                       fi
                   done &&
