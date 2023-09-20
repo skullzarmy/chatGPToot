@@ -21,9 +21,19 @@ jobs:
               run: |
                   echo "$PRIVATE_KEY" > deploy_key
                   chmod 600 deploy_key
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master"
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && npm install"
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "pkill -f 'node app/chatgptoot.js' || true && echo 'Attempted to kill existing bot processes'"
-                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &"
+
+                  # Git Pull
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && git pull origin master" && echo "Git pull successful"
+
+                  # NPM Install
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && npm install" && echo "NPM install successful"
+
+                  # Kill Existing Bot Process
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "pkill -f 'node app/chatgptoot.js' || true" && echo "Attempted to kill existing bot processes"
+
+                  # Start Bot
+                  ssh -o StrictHostKeyChecking=no -i deploy_key $USERNAME@$HOST "cd /home/skullzarmy/chatGPToot && nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &" && echo "Bot started"
+
+                  # Remove Deploy Key
                   echo "Removing deploy key"
                   rm -f deploy_key
