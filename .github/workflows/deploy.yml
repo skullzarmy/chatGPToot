@@ -33,6 +33,8 @@ jobs:
                       fi
                   done &&
                   # Start the new process
-                  npm run bot
+                  nohup node app/chatgptoot.js > logs/bot-log.log 2>&1 &
+                  disown
+                  exit 0
                   "
                   rm -f deploy_key
