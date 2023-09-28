@@ -929,8 +929,8 @@ async function handleRssLoop() {
                 if (!toot) {
                     throw new Error("Error generating toot");
                 }
-                postToot(toot, "public", null);
-                rss.logItem(item.guid._);
+                await postToot(toot, "public", null);
+                rss.logItem(item.link[0]);
             } catch (error) {
                 console.error("Error processing RSS item:", error);
             }
