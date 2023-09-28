@@ -1057,10 +1057,10 @@ async function generateToot(prompt = false, rss = false) {
         }
 
         if (rss) {
-            const title = rss.title;
-            const pubDate = rss.pubDate;
-            const link = rss.link;
-            const content = rss["content:encoded"][0];
+            const title = rss.title[0] || "No title available";
+            const pubDate = rss.pubDate[0] || "No publish date available";
+            const link = rss.link[0] || "No link available";
+            const content = rss.description ? rss.description[0] : "No content available";
             msg.push(
                 {
                     role: "user",
@@ -1095,8 +1095,7 @@ async function generateToot(prompt = false, rss = false) {
 
         const toot = response.data.choices[0].message.content;
         if (toot.trim() === "") {
-            console.log("Generated toot is empty");
-            reject("Generated toot is empty");
+            throw new Error("Generated toot is empty");
         } else {
             return toot;
         }
