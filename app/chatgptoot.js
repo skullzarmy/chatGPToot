@@ -1035,7 +1035,7 @@ async function generateImagePrompt(prompt = false) {
  */
 async function generateToot(prompt = false, rss = false) {
     try {
-        const msg = [
+        let msg = [
             {
                 role: "system",
                 content:

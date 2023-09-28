@@ -12,6 +12,7 @@
         "single-toot": "node app/chatgptoot.js --no-loop --no-image --no-mention --toot-now",
         "single-image": "node app/chatgptoot.js --no-loop --no-mention --no-toot --image-now",
         "single-mention": "node app/chatgptoot.js --no-loop --no-toot --no-image",
+        "single-rss": "node app/chatgptoot.js --no-loop --no-toot --no-image --no-mention --rss-now",
         "tail-logs": "tail -f logs/bot-log.log",
         "bot-tail": "npm run bot && npm run tail-logs",
         "usage": "node app/usage_log_summary.js",
