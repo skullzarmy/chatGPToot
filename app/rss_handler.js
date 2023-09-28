@@ -1,4 +1,3 @@
-// rss_handler.js
 const axios = require("axios");
 const xml2js = require("xml2js");
 const fs = require("fs");
@@ -19,7 +18,6 @@ class rssHandler {
             const parsedData = await xml2js.parseStringPromise(response.data);
             console.log(`Fetched feed from ${url}`);
             console.log(`Found ${parsedData.rss.channel[0].item.length} items`);
-            // console.log(response.data);
             return parsedData.rss.channel[0].item;
         } catch (error) {
             console.error(`Error fetching feed from ${url}:`, error);
@@ -29,11 +27,13 @@ class rssHandler {
 
     loadTrackedItems() {
         try {
-            if (fs.existsSync(JSON_FILE) && fs.readFileSync(JSON_FILE, "utf-8").length > 0) {
-                return JSON.parse(fs.readFileSync(JSON_FILE, "utf-8"));
-            } else {
-                return {};
+            if (fs.existsSync(JSON_FILE)) {
+                const fileContent = fs.readFileSync(JSON_FILE, "utf-8");
+                if (fileContent.length > 0) {
+                    return JSON.parse(fileContent);
+                }
             }
+            return {};
         } catch (error) {
             console.error("Error loading tracked items:", error);
             return {};
@@ -48,12 +48,12 @@ class rssHandler {
         }
     }
 
-    isNewItem(guid) {
-        return !this.trackedItems.hasOwnProperty(guid);
+    isNewItem(link) {
+        return !this.trackedItems.hasOwnProperty(link);
     }
 
-    trackItem(guid) {
-        this.trackedItems[guid] = true;
+    trackItem(link) {
+        this.trackedItems[link] = true;
     }
 
     async checkNewItems() {
@@ -63,8 +63,8 @@ class rssHandler {
             const items = await this.fetchFeed(url);
 
             for (const item of items) {
-                const guid = item.guid[0];
-                if (this.isNewItem(guid)) {
+                const link = item.link[0];
+                if (this.isNewItem(link)) {
                     newItems.push(item);
                 }
             }
@@ -74,8 +74,8 @@ class rssHandler {
         return newItems;
     }
 
-    logItem(guid) {
-        this.trackItem(guid);
+    logItem(link) {
+        this.trackItem(link);
         this.saveTrackedItems();
     }
 }
@@ -85,9 +85,9 @@ async function ingestFeeds(urls) {
     const items = await handler.checkNewItems();
 
     for (const item of items) {
-        const guid = item.guid[0];
-        console.log(`Ingesting item: ${item.title[0]} (${guid})`);
-        handler.logItem(guid);
+        const link = item.link[0];
+        console.log(`Ingesting item: ${item.title[0]} (${link})`);
+        handler.logItem(link);
     }
 }
 
