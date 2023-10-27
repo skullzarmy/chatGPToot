@@ -29,7 +29,7 @@
     "author": "Joe Peterson (@skullzarmy@mastodon.social)",
     "license": "MIT",
     "dependencies": {
-        "axios": "^1.5.0",
+        "axios": "^1.6.0",
         "bottleneck": "^2.19.5",
         "date-fns": "^2.30.0",
         "dotenv-safe": "^8.2.0",
@@ -38,7 +38,7 @@
         "helmet": "^6.2.0",
         "moment-timezone": "^0.5.43",
         "node-cron": "^3.0.2",
-        "openai": "^3.3.0",
+        "openai": "^4.0.0",
         "redis": "^4.6.8",
         "tusk-mastodon": "^2.0.2",
         "xml2js": "^0.6.2"
