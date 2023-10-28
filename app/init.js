@@ -1,11 +1,10 @@
-const { Configuration, OpenAIApi } = require("openai");
+const { OpenAI } = require("openai");
 const T = require("tusk-mastodon");
 const dotenvSafe = require("dotenv-safe");
 dotenvSafe.config();
 const { Group } = require("bottleneck");
 
-const configuration = new Configuration({ apiKey: process.env.OPENAI_KEY });
-const openai = new OpenAIApi(configuration);
+const openai = new OpenAI({ apiKey: process.env.OPENAI_KEY });
 
 /**
  *
