@@ -455,8 +455,8 @@ async function processMention(mention, following) {
 async function handleImageCommand(mention, prompt, isFollowing = false) {
     if (isFollowing) {
         try {
-            const response = await openai.createImage({ prompt, n: 1, size: "512x512" });
-            const imageUrl = response.data.data[0].url;
+            const response = await openai.images.generate({ prompt, n: 1, size: "512x512" });
+            const imageUrl = response.data[0].url;
             const tokens = "unknown";
 
             const filename = `new_toot_${Date.now()}.png`;
@@ -532,8 +532,8 @@ async function handleImageAssistCommand(mention, prompt, isFollowing = false) {
         try {
             const newPrompt = await generateImagePrompt(prompt);
 
-            const response = await openai.createImage({ prompt: newPrompt, n: 1, size: "512x512" });
-            const imageUrl = response.data.data[0].url;
+            const response = await openai.images.generate({ prompt: newPrompt, n: 1, size: "512x512" });
+            const imageUrl = response.data[0].url;
             const tokens = "unknown";
 
             const filename = `new_toot_${Date.now()}.png`;
