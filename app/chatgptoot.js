@@ -252,7 +252,7 @@ async function getStatus() {
         });
 
         let openAIStatus = "not working";
-        if (response.data.choices[0].text) {
+        if (response.choices[0].text) {
             openAIStatus = "working as expected";
         }
 
@@ -261,7 +261,7 @@ async function getStatus() {
             .format(
                 "YYYY-MM-DD HH:mm:ss"
             )} in UTC. Currently ${countfeedback} logged feedback message(s). The connection to OpenAI is ${openAIStatus}. Test response: ${
-            response.data.choices[0].text ? response.data.choices[0].text : "Test failed"
+            response.choices[0].text ? response.choices[0].text : "Test failed"
         }`;
 
         return status;
@@ -632,11 +632,11 @@ async function handleNewsCommand(mention) {
                 content:
                     "Please summarize the latest news article in one or two sentences. You can also add your own thoughts or opinions.",
             });
-            const response = await openai.createChatCompletion({
+            const response = await openai.chat.completions.create({
                 model: config.gpt_model,
                 messages: msg,
             });
-            summaries.push(`${item.title}\n${response.data.choices[0].message.content}\n${item.link}`);
+            summaries.push(`${item.title}\n${response.choices[0].message.content}\n${item.link}`);
         }
 
         const reply = `@${mention.account.acct} ${summaries.join("\n\n")}`;
@@ -758,12 +758,12 @@ async function handleRegularMention(mention) {
 
         conversation = await addContext(conversation);
 
-        const response = await openai.createChatCompletion({
+        const response = await openai.chat.completions.create({
             model: config.gpt_model,
             messages: conversation,
         });
 
-        let reply = response.data.choices[0].message.content;
+        let reply = response.choices[0].message.content;
         const tootVis = mention ? mention.status.visibility : false || "public";
         if (tootVis == "direct") {
             reply = `@${mention.account.acct} ${reply}`;
@@ -776,7 +776,7 @@ async function handleRegularMention(mention) {
             .reverse()
             .find((message) => message.role === "user");
         if (lastUserMessage) {
-            const tokens = response.data.choices[0].tokens;
+            const tokens = response.choices[0].tokens;
             logUsage(mention.account.acct, mention.status.id, lastUserMessage.content, tokens, "chat");
         }
     } catch (error) {
@@ -1009,12 +1009,12 @@ async function generateImagePrompt(prompt = false) {
             content: prompt,
         });
 
-        const response = await openai.createChatCompletion({
+        const response = await openai.chat.completions.create({
             model: config.gpt_model,
             messages: msg,
         });
 
-        const final_prompt = response.data.choices[0].message.content;
+        const final_prompt = response.choices[0].message.content;
         return final_prompt;
     } catch (error) {
         console.error(`OpenAI Error: ${error}`);
@@ -1085,15 +1085,15 @@ async function generateToot(prompt = false, rss = false) {
             );
         }
 
-        const response = await openai.createChatCompletion({
+        const response = await openai.chat.completions.create({
             model: config.gpt_model,
             messages: msg,
         });
 
-        const tokens = response.data.choices[0].message.tokens;
+        const tokens = response.choices[0].message.tokens;
         logUsage("mrroboto", null, "generate toot", tokens, "chat");
 
-        const toot = response.data.choices[0].message.content;
+        const toot = response.choices[0].message.content;
         if (toot.trim() === "") {
             throw new Error("Generated toot is empty");
         } else {
