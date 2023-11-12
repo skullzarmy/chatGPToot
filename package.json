@@ -40,7 +40,7 @@
         "node-cron": "^3.0.2",
         "openai": "^4.0.0",
         "redis": "^4.6.9",
-        "tusk-mastodon": "^2.0.2",
+        "tusk-mastodon": "^2.0.3",
         "xml2js": "^0.6.2"
     }
 }
