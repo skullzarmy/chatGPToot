@@ -9,6 +9,7 @@ const { exec } = require("child_process");
 const app = express();
 const port = process.env.PORT || 3000;
 const authToken = process.env.STATUS_API_TOKEN;
+app.set("trust proxy", 1);
 
 app.use(
     rateLimit({
