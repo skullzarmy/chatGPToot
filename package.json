@@ -39,7 +39,7 @@
         "moment-timezone": "^0.5.43",
         "node-cron": "^3.0.2",
         "openai": "^4.0.0",
-        "redis": "^4.6.9",
+        "redis": "^4.6.10",
         "tusk-mastodon": "^2.0.2",
         "xml2js": "^0.6.2"
     }
