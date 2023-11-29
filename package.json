@@ -37,7 +37,7 @@
         "express-rate-limit": "^7.1.0",
         "helmet": "^6.2.0",
         "moment-timezone": "^0.5.43",
-        "node-cron": "^3.0.2",
+        "node-cron": "^3.0.3",
         "openai": "^4.0.0",
         "redis": "^4.6.9",
         "tusk-mastodon": "^2.0.2",
