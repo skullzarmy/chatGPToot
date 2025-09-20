@@ -1,5 +1,7 @@
 [![Stand With Ukraine](https://raw.githubusercontent.com/vshymanskyy/StandWithUkraine/main/banner2-direct.svg)](https://stand-with-ukraine.pp.ua)
 
+<div style="color:red!important;font-size:20px;font-weight:bold;">[THIS REPOSITORY IS NO LONGER MAINTAINED AND IS PROVIDED FOR REFERENCE ONLY]</div>
+
 # chatGPToot 🦣 -- Mastodon OpenAI Chatbot 🤖
 
 ![GitHub issues](https://img.shields.io/github/issues-raw/skullzarmy/chatGPToot)
